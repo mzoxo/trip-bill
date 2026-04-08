@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
 import { SectionCard, StatusBanner } from '../../shared/ui.jsx';
-import { getAppSettings } from '../../lib/storage/settings.js';
-import { getPaymentRules, getSuicaRecords } from '../../lib/gas/client.js';
+import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
+import { getAppData } from '../../lib/gas/client.js';
 import { getPaymentAdvice } from '../../lib/domain/getPaymentAdvice.js';
 import { formatCurrency, formatPercent, toNumber } from '../../lib/domain/format.js';
 
@@ -17,20 +17,21 @@ export function AdvicePage() {
 
   useEffect(() => {
     async function load() {
-      const settings = getAppSettings();
-      const [rulesResult, suicaResult] = await Promise.all([
-        getPaymentRules(settings.webAppUrl, settings.token),
-        getSuicaRecords(settings.webAppUrl, settings.token),
-      ]);
+      if (!hasAppSettings()) {
+        window.location.href = '/settings.html';
+        return;
+      }
 
-      setRules(rulesResult.data ?? []);
+      const settings = getAppSettings();
+      const result = await getAppData(settings.webAppUrl, settings.token);
+      setRules(result.data?.paymentRules ?? []);
       setSuicaRemainingJpy(
-        (suicaResult.data ?? []).reduce(
+        (result.data?.suicaRecords ?? []).reduce(
           (sum, record) => sum + toNumber(record.remainingJpy),
           0,
         ),
       );
-      setMessage(rulesResult.message || suicaResult.message || '');
+      setMessage(result.message || '');
     }
 
     load();
@@ -58,12 +59,12 @@ export function AdvicePage() {
   return (
     <AppShell
       title="支付建議"
-      subtitle="輸入單筆預計消費後，依目前規則與 Suica 餘額給出建議順序。"
+      subtitle=""
       currentPath="/advice.html"
     >
       {message ? <StatusBanner>{message}</StatusBanner> : null}
       <section className="grid dual-grid">
-        <SectionCard title="試算條件" description="若不勾選支付方式，代表全部都可用。">
+        <SectionCard title="試算條件">
           <div className="form-grid">
             <div className="field is-full">
               <label htmlFor="amountTwd">預估台幣金額</label>
@@ -95,11 +96,9 @@ export function AdvicePage() {
           </div>
         </SectionCard>
 
-        <SectionCard
-          title="目前條件"
-          description={`Suica 剩餘約 ${formatCurrency(suicaRemainingJpy, 'JPY')}`}
-        >
+        <SectionCard title="目前條件">
           <div className="pill-list">
+            <span className="pill">Suica {formatCurrency(suicaRemainingJpy, 'JPY')}</span>
             <span className="pill">單筆試算 {formatCurrency(form.amountTwd, 'TWD')}</span>
             <span className="pill">規則數量 {rules.length}</span>
           </div>
@@ -107,7 +106,7 @@ export function AdvicePage() {
       </section>
 
       <section style={{ marginTop: 18 }}>
-        <SectionCard title="推薦順序" description="先看有效回饋率，再檢查門檻與餘額限制。">
+        <SectionCard title="推薦順序">
           <div className="advice-list">
             {adviceList.map((item, index) => (
               <article className="advice-item" key={item.paymentPlan}>

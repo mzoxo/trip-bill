@@ -1,43 +1,42 @@
+import { ChartPie, ClipboardPenLine, House } from 'lucide-react';
 import '../styles/app.css';
 
 const NAV_ITEMS = [
-  { href: '/index.html', label: '總覽' },
-  { href: '/advice.html', label: '支付建議' },
-  { href: '/ledger.html', label: '記帳' },
-  { href: '/settings.html', label: '設定' },
+  { href: '/index.html', label: '總覽', icon: House },
+  { href: '/advice.html', label: '建議', icon: ChartPie },
+  { href: '/ledger.html', label: '記帳', icon: ClipboardPenLine },
 ];
 
-export function AppShell({ title, subtitle, currentPath, children, actions }) {
+export function AppShell({ title, subtitle, currentPath, children, actions, hideNavigation = false }) {
   return (
     <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand">
-          <p className="brand-kicker">Sapporo Trip</p>
-          <h1>旅程付款助手</h1>
-          <p>用同一套資料整理記帳、付款狀態與即時建議。</p>
-        </div>
-        <nav className="nav">
-          {NAV_ITEMS.map((item) => (
-            <a
-              key={item.href}
-              className={item.href === currentPath ? 'nav-link is-active' : 'nav-link'}
-              href={item.href}
-            >
-              {item.label}
-            </a>
-          ))}
-        </nav>
-      </aside>
       <main className="content">
-        <header className="page-header">
-          <div>
-            <p className="eyebrow">第一版骨架</p>
-            <h2>{title}</h2>
-            <p className="subtitle">{subtitle}</p>
-          </div>
-          {actions ? <div className="header-actions">{actions}</div> : null}
-        </header>
-        {children}
+        <section className="app-frame">
+          {actions ? <header className="app-topbar"><div className="actions-row">{actions}</div></header> : null}
+          {title || subtitle ? (
+            <header className="page-header">
+              <div>
+                {title ? <h2>{title}</h2> : null}
+                {subtitle ? <p className="subtitle">{subtitle}</p> : null}
+              </div>
+            </header>
+          ) : null}
+          <div className="page-content">{children}</div>
+          {hideNavigation ? null : (
+            <nav className="bottom-nav">
+              {NAV_ITEMS.map((item) => (
+                <a
+                  key={item.href}
+                  className={item.href === currentPath ? 'bottom-link is-active' : 'bottom-link'}
+                  href={item.href}
+                >
+                  <item.icon size={18} strokeWidth={2} />
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+          )}
+        </section>
       </main>
     </div>
   );

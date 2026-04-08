@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
 import { SectionCard, StatusBanner } from '../../shared/ui.jsx';
-import { getAppSettings } from '../../lib/storage/settings.js';
+import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import {
   createShoppingRecord,
   createSuicaRecord,
-  getPaymentRules,
-  getShoppingRecords,
-  getSuicaRecords,
+  getAppData,
 } from '../../lib/gas/client.js';
 
 const shoppingInitialState = {
@@ -49,59 +47,91 @@ export function LedgerPage() {
   const [paymentRules, setPaymentRules] = useState([]);
   const [recentRecords, setRecentRecords] = useState({ shopping: [], suica: [] });
   const [message, setMessage] = useState('尚未載入資料');
+  const [isSavingShopping, setIsSavingShopping] = useState(false);
+  const [isSavingSuica, setIsSavingSuica] = useState(false);
 
   useEffect(() => {
-    async function load() {
+    async function load(forceRefresh = false) {
+      if (!hasAppSettings()) {
+        window.location.href = '/settings.html';
+        return;
+      }
+
       const currentSettings = getAppSettings();
       setSettings(currentSettings);
 
-      const [rulesResult, shoppingResult, suicaResult] = await Promise.all([
-        getPaymentRules(currentSettings.webAppUrl, currentSettings.token),
-        getShoppingRecords(currentSettings.webAppUrl, currentSettings.token),
-        getSuicaRecords(currentSettings.webAppUrl, currentSettings.token),
-      ]);
-
-      setPaymentRules(rulesResult.data ?? []);
-      setRecentRecords({
-        shopping: (shoppingResult.data ?? []).slice(-5).reverse(),
-        suica: (suicaResult.data ?? []).slice(-5).reverse(),
+      const result = await getAppData(currentSettings.webAppUrl, currentSettings.token, {
+        forceRefresh,
       });
-      setMessage(rulesResult.message || shoppingResult.message || suicaResult.message || '');
+
+      const shoppingRecords = result.data?.shoppingRecords ?? [];
+      const suicaRecords = result.data?.suicaRecords ?? [];
+      const rules = result.data?.paymentRules ?? [];
+
+      setPaymentRules(rules);
+      setRecentRecords({
+        shopping: shoppingRecords.slice(-5).reverse(),
+        suica: suicaRecords.slice(-5).reverse(),
+      });
+      setMessage(result.message || '');
     }
 
     load();
+    window.__ledgerReload = load;
+    return () => {
+      delete window.__ledgerReload;
+    };
   }, []);
 
   async function handleShoppingSubmit(event) {
     event.preventDefault();
-    const result = await createShoppingRecord(
-      settings.webAppUrl,
-      settings.token,
-      shoppingForm,
-    );
-    setMessage(result.success ? '一般消費已送出' : result.message || '送出失敗');
-    if (result.success) {
-      setShoppingForm(shoppingInitialState);
+    setIsSavingShopping(true);
+    setMessage('一般消費送出中...');
+
+    try {
+      const result = await createShoppingRecord(
+        settings.webAppUrl,
+        settings.token,
+        shoppingForm,
+      );
+      setMessage(result.success ? '一般消費已送出' : result.message || '送出失敗');
+      if (result.success) {
+        setShoppingForm(shoppingInitialState);
+        if (window.__ledgerReload) {
+          await window.__ledgerReload(true);
+        }
+      }
+    } finally {
+      setIsSavingShopping(false);
     }
   }
 
   async function handleSuicaSubmit(event) {
     event.preventDefault();
+    setIsSavingSuica(true);
+    setMessage('Suica 儲值送出中...');
     const payload = {
       ...suicaForm,
       remainingJpy: suicaForm.remainingJpy || suicaForm.chargeJpy,
     };
-    const result = await createSuicaRecord(settings.webAppUrl, settings.token, payload);
-    setMessage(result.success ? 'Suica 儲值已送出' : result.message || '送出失敗');
-    if (result.success) {
-      setSuicaForm(suicaInitialState);
+    try {
+      const result = await createSuicaRecord(settings.webAppUrl, settings.token, payload);
+      setMessage(result.success ? 'Suica 儲值已送出' : result.message || '送出失敗');
+      if (result.success) {
+        setSuicaForm(suicaInitialState);
+        if (window.__ledgerReload) {
+          await window.__ledgerReload(true);
+        }
+      }
+    } finally {
+      setIsSavingSuica(false);
     }
   }
 
   return (
     <AppShell
       title="記帳"
-      subtitle="同一頁處理一般消費與 Suica 儲值，避免資料散在不同入口。"
+      subtitle=""
       currentPath="/ledger.html"
     >
       <StatusBanner tone={settings.webAppUrl ? 'success' : 'warning'}>
@@ -109,8 +139,20 @@ export function LedgerPage() {
       </StatusBanner>
       {message ? <StatusBanner>{message}</StatusBanner> : null}
 
+      <section className="hero-card">
+        <div>
+          <p className="card-label">快速記帳</p>
+          <p className="hero-value">記一筆</p>
+        </div>
+        <div className="pill-list">
+          <span className="pill">一般消費</span>
+          <span className="pill">Suica 儲值</span>
+          <span className="pill">最近紀錄</span>
+        </div>
+      </section>
+
       <section className="grid dual-grid">
-        <SectionCard title="一般消費" description="寫入 Google Sheets 的購物分頁。">
+        <SectionCard title="支出">
           <form className="form-grid" onSubmit={handleShoppingSubmit}>
             {renderInput('日期', 'date', shoppingForm, setShoppingForm, 'date')}
             {renderInput('地點', 'location', shoppingForm, setShoppingForm)}
@@ -145,15 +187,15 @@ export function LedgerPage() {
             {renderInput('匯率', 'rate', shoppingForm, setShoppingForm, 'number')}
             <div className="field is-full">
               <div className="actions-row">
-                <button className="button button-primary" type="submit">
-                  新增一般消費
+                <button className="button button-primary" type="submit" disabled={isSavingShopping}>
+                  {isSavingShopping ? '送出中...' : '新增一般消費'}
                 </button>
               </div>
             </div>
           </form>
         </SectionCard>
 
-        <SectionCard title="Suica 儲值" description="資料寫入 Suica紀錄，預設由 J卡 儲值。">
+        <SectionCard title="Suica">
           <form className="form-grid" onSubmit={handleSuicaSubmit}>
             {renderInput('日期', 'date', suicaForm, setSuicaForm, 'date')}
             {renderInput('儲值日幣', 'chargeJpy', suicaForm, setSuicaForm, 'number')}
@@ -187,12 +229,11 @@ export function LedgerPage() {
                   setSuicaForm((current) => ({ ...current, note: event.target.value }))
                 }
               />
-              <p className="field-hint">第一版預設將 Suica 儲值來源視為 J卡。</p>
             </div>
             <div className="field is-full">
               <div className="actions-row">
-                <button className="button button-primary" type="submit">
-                  新增 Suica 儲值
+                <button className="button button-primary" type="submit" disabled={isSavingSuica}>
+                  {isSavingSuica ? '送出中...' : '新增 Suica 儲值'}
                 </button>
               </div>
             </div>
@@ -201,53 +242,35 @@ export function LedgerPage() {
       </section>
 
       <section className="grid dual-grid" style={{ marginTop: 18 }}>
-        <SectionCard title="最近一般消費" description="從購物資料抓最近五筆。">
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>日期</th>
-                  <th>商店</th>
-                  <th>支付</th>
-                  <th>台幣總計</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentRecords.shopping.map((record, index) => (
-                  <tr key={`${record.date}-${record.store}-${index}`}>
-                    <td>{record.date}</td>
-                    <td>{record.store}</td>
-                    <td>{record.payment}</td>
-                    <td>{record.twdTotal}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <SectionCard title="最近一般消費">
+          <div className="compact-list">
+            {recentRecords.shopping.map((record, index) => (
+              <article className="compact-item" key={`${record.date}-${record.store}-${index}`}>
+                <div>
+                  <strong>{record.store}</strong>
+                  <p className="card-hint">
+                    {record.date} · {record.payment}
+                  </p>
+                </div>
+                <strong>{record.twdTotal}</strong>
+              </article>
+            ))}
           </div>
         </SectionCard>
 
-        <SectionCard title="最近 Suica 儲值" description="從 Suica紀錄 抓最近五筆。">
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>日期</th>
-                  <th>儲值日幣</th>
-                  <th>剩餘日幣</th>
-                  <th>狀態</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentRecords.suica.map((record, index) => (
-                  <tr key={`${record.date}-${record.chargeJpy}-${index}`}>
-                    <td>{record.date}</td>
-                    <td>{record.chargeJpy}</td>
-                    <td>{record.remainingJpy}</td>
-                    <td>{record.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <SectionCard title="最近 Suica 儲值">
+          <div className="compact-list">
+            {recentRecords.suica.map((record, index) => (
+              <article className="compact-item" key={`${record.date}-${record.chargeJpy}-${index}`}>
+                <div>
+                  <strong>{record.chargeJpy} JPY</strong>
+                  <p className="card-hint">
+                    {record.date} · {record.status}
+                  </p>
+                </div>
+                <strong>{record.remainingJpy} JPY</strong>
+              </article>
+            ))}
           </div>
         </SectionCard>
       </section>

@@ -24,3 +24,8 @@ export function saveAppSettings(settings) {
 export function clearAppSettings() {
   window.localStorage.removeItem(SETTINGS_KEY);
 }
+
+export function hasAppSettings() {
+  const settings = getAppSettings();
+  return Boolean(settings.webAppUrl && settings.token);
+}
