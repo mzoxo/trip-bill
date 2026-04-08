@@ -1,43 +1,49 @@
+import {
+  BusFront,
+  ChartPie,
+  CupSoda,
+  ReceiptText,
+  ShoppingBag,
+  TrainFront,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
-import { SectionCard, StatCard, StatusBanner } from '../../shared/ui.jsx';
-import { getAppSettings } from '../../lib/storage/settings.js';
-import {
-  getPaymentRules,
-  getShoppingRecords,
-  getSuicaRecords,
-} from '../../lib/gas/client.js';
+import { StatusBanner } from '../../shared/ui.jsx';
+import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
+import { getAppData } from '../../lib/gas/client.js';
 import { calcOverview } from '../../lib/domain/calcOverview.js';
-import { calcPaymentStatus } from '../../lib/domain/calcPaymentStatus.js';
-import { formatCurrency } from '../../lib/domain/format.js';
+import { formatCurrency, toNumber } from '../../lib/domain/format.js';
+
+const DEFAULT_BUDGET_TWD = 23000;
+const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
 
 export function OverviewPage() {
   const [state, setState] = useState({
     loading: true,
     message: '',
     overview: null,
-    paymentStatus: [],
+    groupedRecords: [],
+    rateInfo: null,
   });
 
   useEffect(() => {
     async function load() {
-      const settings = getAppSettings();
-      const [shoppingResult, suicaResult, rulesResult] = await Promise.all([
-        getShoppingRecords(settings.webAppUrl, settings.token),
-        getSuicaRecords(settings.webAppUrl, settings.token),
-        getPaymentRules(settings.webAppUrl, settings.token),
-      ]);
+      if (!hasAppSettings()) {
+        window.location.href = '/settings.html';
+        return;
+      }
 
-      const records = shoppingResult.data ?? [];
-      const suicaRecords = suicaResult.data ?? [];
-      const rules = rulesResult.data ?? [];
+      const settings = getAppSettings();
+      const appDataResult = await getAppData(settings.webAppUrl, settings.token);
+      const records = appDataResult.data?.shoppingRecords ?? [];
+      const suicaRecords = appDataResult.data?.suicaRecords ?? [];
 
       setState({
         loading: false,
-        message:
-          shoppingResult.message || suicaResult.message || rulesResult.message || '',
+        message: appDataResult.message || '',
         overview: calcOverview(records, suicaRecords),
-        paymentStatus: calcPaymentStatus(records, suicaRecords, rules),
+        groupedRecords: groupRecordsByDate(records),
+        rateInfo: appDataResult.data?.latestRate ?? null,
       });
     }
 
@@ -45,90 +51,245 @@ export function OverviewPage() {
   }, []);
 
   const overview = state.overview;
+  const budget = DEFAULT_BUDGET_TWD;
+  const remaining = Math.max(budget - (overview?.totalCost ?? 0), 0);
+  const overspend = Math.max((overview?.totalCost ?? 0) - budget, 0);
+  const progress = Math.min(Math.round(((overview?.totalCost ?? 0) / budget) * 100), 999);
+  const ringProgress = Math.min(Math.max(progress, 0), 100);
+  const ringClassName = getBudgetRingClassName(overview?.totalCost ?? 0, overspend);
+  const isOverBudget = overspend > 0;
 
   return (
-    <AppShell
-      title="旅程付款總覽"
-      subtitle="集中看目前總支出、Suica 餘額與各支付方案使用進度。"
-      currentPath="/index.html"
-    >
+    <AppShell title="" subtitle="" currentPath="/index.html">
       {state.message ? <StatusBanner>{state.message}</StatusBanner> : null}
       {state.loading || !overview ? (
         <StatusBanner tone="neutral">正在整理資料...</StatusBanner>
       ) : (
         <>
-          <section className="grid stats-grid">
-            <StatCard label="總支出" value={formatCurrency(overview.totalCost, 'TWD')} />
-            <StatCard label="日幣總額" value={formatCurrency(overview.totalJpy, 'JPY')} />
-            <StatCard label="台幣金額" value={formatCurrency(overview.totalTwd, 'TWD')} />
-            <StatCard
-              label="Suica 剩餘"
-              value={formatCurrency(overview.suicaRemainingJpy, 'JPY')}
-              hint={`儲值成本 ${formatCurrency(overview.suicaChargeCostTwd, 'TWD')}`}
-            />
+          {state.rateInfo ? (
+            <div className="rate-strip">
+              即時匯率 1 JPY ≈ NT$ {state.rateInfo.rate.toFixed(4)}
+            </div>
+          ) : null}
+
+          <section className="budget-panel">
+            <div className="budget-head">
+              <div
+                className={ringClassName}
+                style={{ '--budget-progress': `${ringProgress}%` }}
+              >
+                <span>{progress}%</span>
+              </div>
+              <div className="budget-copy">
+                <p className="budget-label">
+                  預算 <span>{formatCurrency(budget, 'TWD')}</span>
+                </p>
+                <p className={isOverBudget ? 'budget-over is-over' : 'budget-over'}>
+                  {isOverBudget ? '超支' : '剩餘'}{' '}
+                  <span>{formatCurrency(isOverBudget ? overspend : remaining, 'TWD')}</span>
+                </p>
+              </div>
+            </div>
           </section>
 
-          <section className="grid dual-grid" style={{ marginTop: 18 }}>
-            <SectionCard title="支付摘要" description="依購物紀錄中的實際支付方式彙總。">
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>支付</th>
-                      <th>筆數</th>
-                      <th>日幣</th>
-                      <th>台幣總成本</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.entries(overview.byPayment).map(([payment, summary]) => (
-                      <tr key={payment}>
-                        <td>{payment}</td>
-                        <td>{summary.count}</td>
-                        <td>{formatCurrency(summary.totalJpy, 'JPY')}</td>
-                        <td>{formatCurrency(summary.totalCost, 'TWD')}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </SectionCard>
-
-            <SectionCard title="付款狀態" description="根據付款規則與目前已記帳資料估算。">
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>方案</th>
-                      <th>已用台幣</th>
-                      <th>單筆剩餘</th>
-                      <th>累積剩餘</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {state.paymentStatus.map((item) => (
-                      <tr key={item.paymentPlan}>
-                        <td>{item.paymentPlan}</td>
-                        <td>{formatCurrency(item.usedTwd, 'TWD')}</td>
-                        <td>
-                          {item.singleRemainingTwd === null
-                            ? '無'
-                            : formatCurrency(item.singleRemainingTwd, 'TWD')}
-                        </td>
-                        <td>
-                          {item.cumulativeRemainingTwd === null
-                            ? '無'
-                            : formatCurrency(item.cumulativeRemainingTwd, 'TWD')}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </SectionCard>
+          <section className="summary-duo">
+            <article className="summary-card summary-card-expense">
+              <p>支出</p>
+              <strong>{formatCurrency(overview.totalCost, 'TWD')}</strong>
+            </article>
+            <article className="summary-card summary-card-income">
+              <p>收入</p>
+              <strong>{formatCurrency(0, 'TWD')}</strong>
+            </article>
           </section>
+
+          <section className="overview-section">
+            <div className="section-tabs">
+              <strong className="tab-active">交易記錄</strong>
+              <span className="tab-disabled">
+                <ChartPie size={16} strokeWidth={2} />
+                圖表分析
+              </span>
+            </div>
+            <div className="record-group-list">
+              {state.groupedRecords.map((group) => (
+                <section className="record-group" key={group.date}>
+                  <header className="record-group-header">
+                    <strong>{group.label}</strong>
+                    <span className="record-group-summary">
+                      <span className="record-group-expense">
+                        -{formatCurrency(group.expenseTwd, 'TWD')}
+                      </span>{' '}
+                      /{' '}
+                      <span className="record-group-income">
+                        {formatCurrency(group.incomeTwd, 'TWD')}
+                      </span>
+                    </span>
+                  </header>
+                  <div className="record-list">
+                    {group.records.map((record, index) => (
+                      <article className="record-item" key={`${group.date}-${record.store}-${index}`}>
+                        <div className="record-main">
+                          <div className="record-icon">{getCategoryIcon(record.category)}</div>
+                          <div>
+                            <strong>
+                              {record.name || record.store}
+                              {renderQuantity(record.quantity)}
+                            </strong>
+                            <p className="record-meta">
+                              {record.store} {record.category ? ` ${record.category}` : ''}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="record-amounts">
+                          <strong className="record-amount">
+                            {formatPrimaryAmount(record, state.rateInfo?.rate)}
+                          </strong>
+                          <span className="record-amount-sub">
+                            {formatSecondaryAmount(record)}
+                          </span>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </section>
+
+          <a className="floating-ledger-button" href="/ledger.html">
+            記帳
+          </a>
         </>
       )}
     </AppShell>
   );
+}
+
+function groupRecordsByDate(records) {
+  const grouped = records.reduce((accumulator, record) => {
+    const date = record.date || 'unknown';
+    const current = accumulator[date] ?? {
+      date,
+      records: [],
+      expenseTwd: 0,
+      incomeTwd: 0,
+    };
+
+    current.records.push(record);
+    const twd = Math.abs(toNumber(record.twdTotal));
+    if (toNumber(record.twdTotal) >= 0) {
+      current.expenseTwd += twd;
+    } else {
+      current.incomeTwd += twd;
+    }
+
+    accumulator[date] = current;
+    return accumulator;
+  }, {});
+
+  return Object.values(grouped)
+    .sort((left, right) => right.date.localeCompare(left.date))
+    .map((group) => ({
+      ...group,
+      label: formatDateLabel(group.date),
+    }));
+}
+
+function formatDateLabel(value) {
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${month}-${day}(${WEEKDAYS[date.getDay()]})`;
+}
+
+function renderQuantity(quantity) {
+  const amount = toNumber(quantity);
+  if (amount <= 1) {
+    return null;
+  }
+
+  return <span className="record-quantity"> X{amount}</span>;
+}
+
+function getCategoryIcon(category) {
+  switch (category) {
+    case '交通':
+      return <TrainFront size={18} strokeWidth={2} />;
+    case '食物':
+      return <CupSoda size={18} strokeWidth={2} />;
+    case '生活用品':
+      return <ShoppingBag size={18} strokeWidth={2} />;
+    case '公車':
+      return <BusFront size={18} strokeWidth={2} />;
+    default:
+      return <ReceiptText size={18} strokeWidth={2} />;
+  }
+}
+
+function getRecordTwdAmount(record) {
+  return firstNonZero([
+    record.twdTotal,
+    record.twdAmount,
+    record.total,
+  ]);
+}
+
+function getRecordJpyAmount(record) {
+  return firstNonZero([
+    record.jpyAmount,
+    record.total,
+    record.jpyNet,
+  ]);
+}
+
+function formatPrimaryAmount(record, rate) {
+  if (usesDirectTwdAmount(record.payment)) {
+    return formatCurrency(getRecordTwdAmount(record), 'TWD');
+  }
+
+  const jpy = getRecordJpyAmount(record);
+  const estimatedTwd = rate ? jpy * rate : 0;
+  return formatCurrency(estimatedTwd, 'TWD');
+}
+
+function formatSecondaryAmount(record) {
+  return formatCurrency(getRecordJpyAmount(record), 'JPY');
+}
+
+function usesDirectTwdAmount(payment) {
+  return [
+    '全盈+PAY',
+    '全盈+PAY玉山',
+    '全盈+PAY國泰',
+    '全支付',
+    '全支付國泰',
+  ].includes(payment);
+}
+
+function firstNonZero(values) {
+  for (const value of values) {
+    const parsed = toNumber(value);
+    if (parsed !== 0) {
+      return parsed;
+    }
+  }
+
+  return 0;
+}
+
+function getBudgetRingClassName(totalCost, overspend) {
+  if (overspend > 0) {
+    return 'budget-ring is-over';
+  }
+
+  if (totalCost > 0) {
+    return 'budget-ring is-active';
+  }
+
+  return 'budget-ring';
 }
