@@ -319,9 +319,29 @@ textarea {
 }
 
 .record-meta {
-  margin: 4px 0 0;
-  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 0;
   font-size: 13px;
+}
+
+.record-category-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.record-meta-text {
+  color: var(--muted);
 }
 
 .record-quantity {
@@ -542,6 +562,29 @@ textarea {
   color: #4b5563;
   font-size: 13px;
   font-weight: 700;
+}
+
+.choice-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.choice-chip {
+  padding: 8px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #4b5563;
+  cursor: pointer;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.choice-chip.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-deep);
 }
 
 .advice-list {

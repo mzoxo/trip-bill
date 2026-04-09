@@ -8,6 +8,28 @@ import {
   getAppData,
 } from '../../lib/gas/client.js';
 
+const CATEGORY_OPTIONS = [
+  '餅乾',
+  '糖果',
+  '伴手禮',
+  '甜食',
+  '飲料',
+  '生活用品',
+  '眼鏡',
+  '門票',
+  '紀念品',
+  '交通',
+  '麵包',
+  '食材',
+  '包包',
+  '電器',
+  '代買',
+  '上供',
+  '藥妝',
+  '食物',
+  '衣物',
+];
+
 const shoppingInitialState = {
   date: '',
   location: '',
@@ -157,7 +179,30 @@ export function LedgerPage() {
             {renderInput('日期', 'date', shoppingForm, setShoppingForm, 'date')}
             {renderInput('地點', 'location', shoppingForm, setShoppingForm)}
             {renderInput('商店', 'store', shoppingForm, setShoppingForm)}
-            {renderInput('屬性', 'category', shoppingForm, setShoppingForm)}
+            <div className="field is-full">
+              <label htmlFor="category">屬性</label>
+              <div className="choice-chip-list" id="category" role="radiogroup" aria-label="屬性">
+                {CATEGORY_OPTIONS.map((option) => {
+                  const isSelected = shoppingForm.category === option;
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      className={isSelected ? 'choice-chip is-selected' : 'choice-chip'}
+                      aria-pressed={isSelected}
+                      onClick={() =>
+                        setShoppingForm((current) => ({
+                          ...current,
+                          category: current.category === option ? '' : option,
+                        }))
+                      }
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             {renderInput('名稱', 'name', shoppingForm, setShoppingForm)}
             {renderInput('數', 'quantity', shoppingForm, setShoppingForm, 'number')}
             {renderInput('總計', 'total', shoppingForm, setShoppingForm, 'number')}

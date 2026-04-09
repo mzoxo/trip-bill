@@ -136,9 +136,14 @@ export function OverviewPage() {
                               {record.name || record.store}
                               {renderQuantity(record.quantity)}
                             </strong>
-                            <p className="record-meta">
-                              {record.store} {record.category ? ` ${record.category}` : ''}
-                            </p>
+                            <div className="record-meta">
+                              {record.category ? (
+                                <span className="record-category-badge">{record.category}</span>
+                              ) : null}
+                              {record.store ? (
+                                <span className="record-meta-text">{record.store}</span>
+                              ) : null}
+                            </div>
                           </div>
                         </div>
                         <div className="record-amounts">
