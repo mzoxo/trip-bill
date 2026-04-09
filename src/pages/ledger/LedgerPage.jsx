@@ -7,27 +7,45 @@ import {
   createSuicaRecord,
   getAppData,
 } from '../../lib/gas/client.js';
+import breadIcon from '../../assets/openmoji/bread.svg';
+import candyIcon from '../../assets/openmoji/candy.svg';
+import cookieIcon from '../../assets/openmoji/cookie.svg';
+import drinkIcon from '../../assets/openmoji/drink.svg';
+import electricPlugIcon from '../../assets/openmoji/electric-plug.svg';
+import framedPictureIcon from '../../assets/openmoji/framed-picture.svg';
+import giftIcon from '../../assets/openmoji/gift.svg';
+import glassesIcon from '../../assets/openmoji/glasses.svg';
+import hamburgerIcon from '../../assets/openmoji/hamburger.svg';
+import handbagIcon from '../../assets/openmoji/handbag.svg';
+import lipstickIcon from '../../assets/openmoji/lipstick.svg';
+import potOfFoodIcon from '../../assets/openmoji/pot-of-food.svg';
+import prayerBeadsIcon from '../../assets/openmoji/prayer-beads.svg';
+import shoppingBagsIcon from '../../assets/openmoji/shopping-bags.svg';
+import shortcakeIcon from '../../assets/openmoji/shortcake.svg';
+import tshirtIcon from '../../assets/openmoji/t-shirt.svg';
+import ticketsIcon from '../../assets/openmoji/tickets.svg';
+import trainIcon from '../../assets/openmoji/train.svg';
 
 const CATEGORY_OPTIONS = [
-  '餅乾',
-  '糖果',
-  '伴手禮',
-  '甜食',
-  '飲料',
-  '生活用品',
-  '眼鏡',
-  '門票',
-  '紀念品',
-  '交通',
-  '麵包',
-  '食材',
-  '包包',
-  '電器',
-  '代買',
-  '上供',
-  '藥妝',
-  '食物',
-  '衣物',
+  { label: '餅乾', icon: cookieIcon },
+  { label: '糖果', icon: candyIcon },
+  { label: '伴手禮', icon: giftIcon },
+  { label: '甜食', icon: shortcakeIcon },
+  { label: '飲料', icon: drinkIcon },
+  { label: '生活用品', icon: shoppingBagsIcon },
+  { label: '眼鏡', icon: glassesIcon },
+  { label: '門票', icon: ticketsIcon },
+  { label: '紀念品', icon: framedPictureIcon },
+  { label: '交通', icon: trainIcon },
+  { label: '麵包', icon: breadIcon },
+  { label: '食材', icon: potOfFoodIcon },
+  { label: '包包', icon: handbagIcon },
+  { label: '電器', icon: electricPlugIcon },
+  { label: '代買', icon: shoppingBagsIcon },
+  { label: '上供', icon: prayerBeadsIcon },
+  { label: '藥妝', icon: lipstickIcon },
+  { label: '食物', icon: hamburgerIcon },
+  { label: '衣物', icon: tshirtIcon },
 ];
 
 const shoppingInitialState = {
@@ -183,21 +201,22 @@ export function LedgerPage() {
               <label htmlFor="category">屬性</label>
               <div className="choice-chip-list" id="category" role="radiogroup" aria-label="屬性">
                 {CATEGORY_OPTIONS.map((option) => {
-                  const isSelected = shoppingForm.category === option;
+                  const isSelected = shoppingForm.category === option.label;
                   return (
                     <button
-                      key={option}
+                      key={option.label}
                       type="button"
                       className={isSelected ? 'choice-chip is-selected' : 'choice-chip'}
                       aria-pressed={isSelected}
                       onClick={() =>
                         setShoppingForm((current) => ({
                           ...current,
-                          category: current.category === option ? '' : option,
+                          category: current.category === option.label ? '' : option.label,
                         }))
                       }
                     >
-                      {option}
+                      <img className="choice-chip-icon" src={option.icon} alt="" aria-hidden="true" />
+                      <span>{option.label}</span>
                     </button>
                   );
                 })}

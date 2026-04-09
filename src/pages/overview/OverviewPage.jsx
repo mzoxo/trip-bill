@@ -1,12 +1,23 @@
-import {
-  BusFront,
-  ChartPie,
-  CupSoda,
-  ReceiptText,
-  ShoppingBag,
-  TrainFront,
-} from 'lucide-react';
+import { ChartPie } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import breadIcon from '../../assets/openmoji/bread.svg';
+import candyIcon from '../../assets/openmoji/candy.svg';
+import cookieIcon from '../../assets/openmoji/cookie.svg';
+import drinkIcon from '../../assets/openmoji/drink.svg';
+import electricPlugIcon from '../../assets/openmoji/electric-plug.svg';
+import framedPictureIcon from '../../assets/openmoji/framed-picture.svg';
+import giftIcon from '../../assets/openmoji/gift.svg';
+import glassesIcon from '../../assets/openmoji/glasses.svg';
+import hamburgerIcon from '../../assets/openmoji/hamburger.svg';
+import handbagIcon from '../../assets/openmoji/handbag.svg';
+import lipstickIcon from '../../assets/openmoji/lipstick.svg';
+import potOfFoodIcon from '../../assets/openmoji/pot-of-food.svg';
+import prayerBeadsIcon from '../../assets/openmoji/prayer-beads.svg';
+import shoppingBagsIcon from '../../assets/openmoji/shopping-bags.svg';
+import shortcakeIcon from '../../assets/openmoji/shortcake.svg';
+import tshirtIcon from '../../assets/openmoji/t-shirt.svg';
+import ticketsIcon from '../../assets/openmoji/tickets.svg';
+import trainIcon from '../../assets/openmoji/train.svg';
 import { AppShell } from '../../shared/AppShell.jsx';
 import { StatusBanner } from '../../shared/ui.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
@@ -16,6 +27,28 @@ import { formatCurrency, toNumber } from '../../lib/domain/format.js';
 
 const DEFAULT_BUDGET_TWD = 23000;
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
+const CATEGORY_ICON_MAP = {
+  餅乾: cookieIcon,
+  糖果: candyIcon,
+  伴手禮: giftIcon,
+  甜食: shortcakeIcon,
+  飲料: drinkIcon,
+  生活用品: shoppingBagsIcon,
+  眼鏡: glassesIcon,
+  門票: ticketsIcon,
+  紀念品: framedPictureIcon,
+  交通: trainIcon,
+  公車: trainIcon,
+  麵包: breadIcon,
+  食材: potOfFoodIcon,
+  包包: handbagIcon,
+  電器: electricPlugIcon,
+  代買: shoppingBagsIcon,
+  上供: prayerBeadsIcon,
+  藥妝: lipstickIcon,
+  食物: hamburgerIcon,
+  衣物: tshirtIcon,
+};
 
 export function OverviewPage() {
   const [state, setState] = useState({
@@ -222,18 +255,8 @@ function renderQuantity(quantity) {
 }
 
 function getCategoryIcon(category) {
-  switch (category) {
-    case '交通':
-      return <TrainFront size={18} strokeWidth={2} />;
-    case '食物':
-      return <CupSoda size={18} strokeWidth={2} />;
-    case '生活用品':
-      return <ShoppingBag size={18} strokeWidth={2} />;
-    case '公車':
-      return <BusFront size={18} strokeWidth={2} />;
-    default:
-      return <ReceiptText size={18} strokeWidth={2} />;
-  }
+  const icon = CATEGORY_ICON_MAP[category] ?? shoppingBagsIcon;
+  return <img className="record-icon-image" src={icon} alt="" aria-hidden="true" />;
 }
 
 function getRecordTwdAmount(record) {
