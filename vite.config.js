@@ -7,6 +7,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         overview: 'index.html',
+        assets: 'assets.html',
         advice: 'advice.html',
         ledger: 'ledger.html',
         settings: 'settings.html',

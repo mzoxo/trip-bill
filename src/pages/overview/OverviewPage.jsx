@@ -113,19 +113,29 @@ export function OverviewPage() {
               >
                 <span>{progress}%</span>
               </div>
-              <div className="budget-copy">
-                <p className="budget-label">
-                  預算 <span>{formatCurrency(budget, 'TWD')}</span>
-                </p>
-                <p className={isOverBudget ? 'budget-over is-over' : 'budget-over'}>
-                  {isOverBudget ? '超支' : '剩餘'}{' '}
-                  <span>{formatCurrency(isOverBudget ? overspend : remaining, 'TWD')}</span>
-                </p>
+              <div className="budget-body">
+                <div className="budget-copy">
+                  <p className="budget-label">
+                    預算 <span>{formatCurrency(budget, 'TWD')}</span>
+                  </p>
+                  <p className={isOverBudget ? 'budget-over is-over' : 'budget-over'}>
+                    {isOverBudget ? '超支' : '剩餘'}{' '}
+                    <span>{formatCurrency(isOverBudget ? overspend : remaining, 'TWD')}</span>
+                  </p>
+                </div>
+                <div className="budget-copy">
+                  <p className="budget-label">
+                    支出 <span>{formatCurrency(overview.totalCost, 'TWD')}</span>
+                  </p>
+                  <p className="budget-label">
+                    收入 <span>{formatCurrency(0, 'TWD')}</span>
+                  </p>
+                </div>
               </div>
             </div>
           </section>
 
-          <section className="summary-duo">
+          {/* <section className="summary-duo">
             <article className="summary-card summary-card-expense">
               <p>支出</p>
               <strong>{formatCurrency(overview.totalCost, 'TWD')}</strong>
@@ -134,7 +144,7 @@ export function OverviewPage() {
               <p>收入</p>
               <strong>{formatCurrency(0, 'TWD')}</strong>
             </article>
-          </section>
+          </section> */}
 
           <section className="overview-section">
             <div className="section-tabs">

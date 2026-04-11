@@ -11,7 +11,17 @@ function clampRemaining(limit, used) {
 export function calcPaymentStatus(records, suicaRecords, rules) {
   const usageByPayment = records.reduce((accumulator, record) => {
     const payment = record.payment || '未分類';
-    accumulator[payment] = (accumulator[payment] ?? 0) + toNumber(record.twdTotal);
+    const current = accumulator[payment] ?? {
+      usedTwd: 0,
+      recordCount: 0,
+      maxSingleSpentTwd: 0,
+    };
+    const recordCost = toNumber(record.twdTotal || record.twdAmount);
+
+    current.usedTwd += recordCost;
+    current.recordCount += 1;
+    current.maxSingleSpentTwd = Math.max(current.maxSingleSpentTwd, recordCost);
+    accumulator[payment] = current;
     return accumulator;
   }, {});
 
@@ -21,16 +31,39 @@ export function calcPaymentStatus(records, suicaRecords, rules) {
   );
 
   return rules.map((rule) => {
-    const usedTwd = usageByPayment[rule.paymentPlan] ?? 0;
+    const usage = usageByPayment[rule.paymentPlan] ?? {
+      usedTwd: 0,
+      recordCount: 0,
+      maxSingleSpentTwd: 0,
+    };
+    const singleLimitTwd = rule.singleLimitTwd ? toNumber(rule.singleLimitTwd) : null;
+    const cumulativeLimitTwd = rule.cumulativeLimitTwd ? toNumber(rule.cumulativeLimitTwd) : null;
+    const usedTwd = usage.usedTwd;
 
     return {
       paymentPlan: rule.paymentPlan,
       paymentTool: rule.paymentTool,
       usedTwd,
+      recordCount: usage.recordCount,
       rewardRate: toNumber(rule.effectiveRewardRate),
-      singleRemainingTwd: clampRemaining(rule.singleLimitTwd, usedTwd),
-      cumulativeRemainingTwd: clampRemaining(rule.cumulativeLimitTwd, usedTwd),
+      singleLimitTwd,
+      maxSingleSpentTwd: usage.maxSingleSpentTwd,
+      singleRemainingTwd: singleLimitTwd === null
+        ? null
+        : Math.max(singleLimitTwd - usage.maxSingleSpentTwd, 0),
+      hasReachedSingleLimit: singleLimitTwd === null
+        ? false
+        : usage.maxSingleSpentTwd >= singleLimitTwd,
+      cumulativeLimitTwd,
+      cumulativeRemainingTwd: clampRemaining(cumulativeLimitTwd, usedTwd),
+      cumulativeUsageRate: cumulativeLimitTwd
+        ? Math.min(usedTwd / cumulativeLimitTwd, 1)
+        : null,
+      hasReachedCumulativeLimit: cumulativeLimitTwd === null
+        ? false
+        : usedTwd >= cumulativeLimitTwd,
       suicaRemainingJpy: rule.paymentPlan === 'Suica' ? suicaRemainingJpy : null,
+      campaignUrl: rule.campaignUrl || '',
       description: rule.description,
     };
   });

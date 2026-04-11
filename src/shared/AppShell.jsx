@@ -1,10 +1,10 @@
-import { ChartPie, ClipboardPenLine, House } from 'lucide-react';
+import { ChartPie, House, Wallet } from 'lucide-react';
 import '../styles/app.css';
 
 const NAV_ITEMS = [
   { href: '/index.html', label: '總覽', icon: House },
+  { href: '/assets.html', label: '資產', icon: Wallet },
   { href: '/advice.html', label: '建議', icon: ChartPie },
-  { href: '/ledger.html', label: '記帳', icon: ClipboardPenLine },
 ];
 
 export function AppShell({ title, subtitle, currentPath, children, actions, hideNavigation = false }) {
@@ -12,13 +12,16 @@ export function AppShell({ title, subtitle, currentPath, children, actions, hide
     <div className="app-shell">
       <main className="content">
         <section className="app-frame">
-          {actions ? <header className="app-topbar"><div className="actions-row">{actions}</div></header> : null}
+          {actions && !title && !subtitle ? (
+            <header className="app-topbar"><div className="actions-row">{actions}</div></header>
+          ) : null}
           {title || subtitle ? (
             <header className="page-header">
               <div>
                 {title ? <h2>{title}</h2> : null}
                 {subtitle ? <p className="subtitle">{subtitle}</p> : null}
               </div>
+              {actions ? <div className="actions-row">{actions}</div> : null}
             </header>
           ) : null}
           <div className="page-content">{children}</div>
