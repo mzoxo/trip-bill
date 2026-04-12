@@ -1,4 +1,4 @@
-import { ChartPie } from 'lucide-react';
+import { RotateCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import breadIcon from '../../assets/openmoji/bread.svg';
 import candyIcon from '../../assets/openmoji/candy.svg';
@@ -22,7 +22,12 @@ import { AppShell } from '../../shared/AppShell.jsx';
 import { StatusBanner } from '../../shared/ui.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import { getAppData } from '../../lib/gas/client.js';
-import { calcOverview } from '../../lib/domain/calcOverview.js';
+import {
+  calcOverview,
+  getEstimatedRecordTwdCost,
+  getRecordJpyAmount,
+  normalizeRecordDate,
+} from '../../lib/domain/calcOverview.js';
 import { formatCurrency, toNumber } from '../../lib/domain/format.js';
 
 const DEFAULT_BUDGET_TWD = 23000;
@@ -57,31 +62,55 @@ export function OverviewPage() {
     overview: null,
     groupedRecords: [],
     rateInfo: null,
+    rateMap: {},
   });
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    async function load() {
-      if (!hasAppSettings()) {
-        window.location.href = '/settings.html';
-        return;
-      }
-
-      const settings = getAppSettings();
-      const appDataResult = await getAppData(settings.webAppUrl, settings.token);
-      const records = appDataResult.data?.shoppingRecords ?? [];
-      const suicaRecords = appDataResult.data?.suicaRecords ?? [];
-
-      setState({
-        loading: false,
-        message: appDataResult.message || '',
-        overview: calcOverview(records, suicaRecords),
-        groupedRecords: groupRecordsByDate(records),
-        rateInfo: appDataResult.data?.latestRate ?? null,
-      });
+  async function load(forceRefresh = false) {
+    if (!hasAppSettings()) {
+      window.location.href = '/settings.html';
+      return;
     }
 
+    const settings = getAppSettings();
+    const appDataResult = await getAppData(settings.webAppUrl, settings.token, { forceRefresh });
+    const records = appDataResult.data?.shoppingRecords ?? [];
+    const suicaRecords = appDataResult.data?.suicaRecords ?? [];
+    const latestRate = appDataResult.data?.latestRate ?? null;
+    const baseYear = getBaseYear(latestRate?.date);
+    const rateMap = createRateMap(appDataResult.data?.rateHistory ?? []);
+
+    setState({
+      loading: false,
+      message: appDataResult.message || '',
+      overview: calcOverview(records, suicaRecords, {
+        rateMap,
+        fallbackRate: latestRate?.rate,
+        baseYear,
+      }),
+      groupedRecords: groupRecordsByDate(records, {
+        rateMap,
+        fallbackRate: latestRate?.rate,
+        baseYear,
+      }),
+      rateInfo: latestRate,
+      rateMap,
+    });
+  }
+
+  useEffect(() => {
     load();
   }, []);
+
+  async function handleRefresh() {
+    setIsRefreshing(true);
+    setState((current) => ({ ...current, message: '重新抓取資料中...' }));
+    try {
+      await load(true);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }
 
   const overview = state.overview;
   const budget = DEFAULT_BUDGET_TWD;
@@ -93,18 +122,35 @@ export function OverviewPage() {
   const isOverBudget = overspend > 0;
 
   return (
-    <AppShell title="" subtitle="" currentPath="/index.html">
+    <AppShell
+      title={(
+        <span className="page-title-inline">
+          <span>總覽</span>
+          {state.rateInfo ? (
+            <span className="page-title-meta">匯率 {state.rateInfo.rate.toFixed(4)}</span>
+          ) : null}
+        </span>
+      )}
+      subtitle=""
+      currentPath="/index.html"
+      actions={(
+        <button
+          type="button"
+          className={isRefreshing ? 'icon-button is-spinning' : 'icon-button'}
+          aria-label="重新抓取資料"
+          title="重新抓取資料"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+        >
+          <RotateCw size={16} strokeWidth={2.2} />
+        </button>
+      )}
+    >
       {state.message ? <StatusBanner>{state.message}</StatusBanner> : null}
       {state.loading || !overview ? (
         <StatusBanner tone="neutral">正在整理資料...</StatusBanner>
       ) : (
         <>
-          {state.rateInfo ? (
-            <div className="rate-strip">
-              即時匯率 1 JPY ≈ NT$ {state.rateInfo.rate.toFixed(4)}
-            </div>
-          ) : null}
-
           <section className="budget-panel">
             <div className="budget-head">
               <div
@@ -147,13 +193,6 @@ export function OverviewPage() {
           </section> */}
 
           <section className="overview-section">
-            <div className="section-tabs">
-              <strong className="tab-active">交易記錄</strong>
-              <span className="tab-disabled">
-                <ChartPie size={16} strokeWidth={2} />
-                圖表分析
-              </span>
-            </div>
             <div className="record-group-list">
               {state.groupedRecords.map((group) => (
                 <section className="record-group" key={group.date}>
@@ -190,8 +229,8 @@ export function OverviewPage() {
                           </div>
                         </div>
                         <div className="record-amounts">
-                          <strong className="record-amount">
-                            {formatPrimaryAmount(record, state.rateInfo?.rate)}
+                            <strong className="record-amount">
+                            {formatPrimaryAmount(record, state.rateMap, state.rateInfo?.rate)}
                           </strong>
                           <span className="record-amount-sub">
                             {formatSecondaryAmount(record)}
@@ -214,7 +253,10 @@ export function OverviewPage() {
   );
 }
 
-function groupRecordsByDate(records) {
+function groupRecordsByDate(records, options = {}) {
+  const rateMap = options.rateMap ?? {};
+  const fallbackRate = toNumber(options.fallbackRate);
+  const baseYear = options.baseYear ?? new Date().getFullYear();
   const grouped = records.reduce((accumulator, record) => {
     const date = record.date || 'unknown';
     const current = accumulator[date] ?? {
@@ -225,8 +267,10 @@ function groupRecordsByDate(records) {
     };
 
     current.records.push(record);
-    const twd = Math.abs(toNumber(record.twdTotal));
-    if (toNumber(record.twdTotal) >= 0) {
+    const twd = Math.abs(
+      getEstimatedRecordTwdCost(record, rateMap, fallbackRate, baseYear),
+    );
+    if (getEstimatedRecordTwdCost(record, rateMap, fallbackRate, baseYear) >= 0) {
       current.expenseTwd += twd;
     } else {
       current.incomeTwd += twd;
@@ -269,29 +313,13 @@ function getCategoryIcon(category) {
   return <img className="record-icon-image" src={icon} alt="" aria-hidden="true" />;
 }
 
-function getRecordTwdAmount(record) {
-  return firstNonZero([
-    record.twdTotal,
-    record.twdAmount,
-    record.total,
-  ]);
-}
-
-function getRecordJpyAmount(record) {
-  return firstNonZero([
-    record.jpyAmount,
-    record.total,
-    record.jpyNet,
-  ]);
-}
-
-function formatPrimaryAmount(record, rate) {
-  if (usesDirectTwdAmount(record.payment)) {
-    return formatCurrency(getRecordTwdAmount(record), 'TWD');
-  }
-
-  const jpy = getRecordJpyAmount(record);
-  const estimatedTwd = rate ? jpy * rate : 0;
+function formatPrimaryAmount(record, rateMap, fallbackRate) {
+  const estimatedTwd = getEstimatedRecordTwdCost(
+    record,
+    rateMap,
+    fallbackRate,
+    getBaseYear(),
+  );
   return formatCurrency(estimatedTwd, 'TWD');
 }
 
@@ -299,25 +327,22 @@ function formatSecondaryAmount(record) {
   return formatCurrency(getRecordJpyAmount(record), 'JPY');
 }
 
-function usesDirectTwdAmount(payment) {
-  return [
-    '全盈+PAY',
-    '全盈+PAY玉山',
-    '全盈+PAY國泰',
-    '全支付',
-    '全支付國泰',
-  ].includes(payment);
+function createRateMap(rateHistory) {
+  return rateHistory.reduce((accumulator, item) => {
+    const normalizedDate = normalizeRecordDate(item.date, getBaseYear(item.date));
+    if (normalizedDate && item.rate) {
+      accumulator[normalizedDate] = toNumber(item.rate);
+    }
+    return accumulator;
+  }, {});
 }
 
-function firstNonZero(values) {
-  for (const value of values) {
-    const parsed = toNumber(value);
-    if (parsed !== 0) {
-      return parsed;
-    }
+function getBaseYear(dateText) {
+  if (dateText && /^\d{4}-\d{2}-\d{2}$/.test(dateText)) {
+    return Number(dateText.slice(0, 4));
   }
 
-  return 0;
+  return new Date().getFullYear();
 }
 
 function getBudgetRingClassName(totalCost, overspend) {

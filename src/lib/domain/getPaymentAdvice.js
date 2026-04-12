@@ -8,29 +8,34 @@ function includesPayment(allowedPayments, paymentPlan) {
   return allowedPayments.includes(paymentPlan);
 }
 
-export function getPaymentAdvice({ amountTwd, allowedPayments, rules, suicaRemainingJpy }) {
+export function getPaymentAdvice({
+  amountJpy,
+  amountTwd,
+  allowedPayments,
+  rules,
+  suicaRemainingJpy,
+  paymentStatuses = [],
+}) {
+  const statusMap = new Map(paymentStatuses.map((status) => [status.paymentPlan, status]));
+
   return rules
     .filter((rule) => rule.enabled)
     .filter((rule) => includesPayment(allowedPayments, rule.paymentPlan))
     .map((rule) => {
-      const reasons = [];
-      const amount = toNumber(amountTwd);
-      const reward = amount * toNumber(rule.effectiveRewardRate);
+      const amountInJpy = toNumber(amountJpy);
+      const amountInTwd = toNumber(amountTwd);
+      const reward = amountInTwd * toNumber(rule.effectiveRewardRate);
+      const status = statusMap.get(rule.paymentPlan);
+      const cumulativeRemainingTwd = status?.cumulativeRemainingTwd ?? null;
 
-      if (amount < toNumber(rule.minSpendTwd)) {
-        reasons.push('未達最低消費門檻');
-      }
+      const isBelowMinimum = amountInTwd < toNumber(rule.minSpendTwd);
+      const exceedsSingleLimit = rule.singleLimitTwd && amountInTwd > toNumber(rule.singleLimitTwd);
+      const hasInsufficientSuica = rule.paymentPlan === 'Suica' && amountInJpy > toNumber(suicaRemainingJpy);
+      const hasNoCumulativeQuota = cumulativeRemainingTwd !== null
+        && (cumulativeRemainingTwd <= 0 || amountInTwd > cumulativeRemainingTwd);
 
-      if (rule.singleLimitTwd && amount > toNumber(rule.singleLimitTwd)) {
-        reasons.push('超過單筆建議上限');
-      }
-
-      if (rule.paymentPlan === 'Suica' && amount > toNumber(suicaRemainingJpy) * 0.22) {
-        reasons.push('Suica 餘額可能不足');
-      }
-
-      if (!reasons.length) {
-        reasons.push('符合目前條件');
+      if (isBelowMinimum || exceedsSingleLimit || hasInsufficientSuica || hasNoCumulativeQuota) {
+        return null;
       }
 
       return {
@@ -38,8 +43,8 @@ export function getPaymentAdvice({ amountTwd, allowedPayments, rules, suicaRemai
         paymentTool: rule.paymentTool,
         reward,
         effectiveRewardRate: toNumber(rule.effectiveRewardRate),
-        reasons,
       };
     })
+    .filter(Boolean)
     .sort((left, right) => right.effectiveRewardRate - left.effectiveRewardRate);
 }

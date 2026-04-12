@@ -12,18 +12,13 @@ export function AppShell({ title, subtitle, currentPath, children, actions, hide
     <div className="app-shell">
       <main className="content">
         <section className="app-frame">
-          {actions && !title && !subtitle ? (
-            <header className="app-topbar"><div className="actions-row">{actions}</div></header>
-          ) : null}
-          {title || subtitle ? (
-            <header className="page-header">
-              <div>
-                {title ? <h2>{title}</h2> : null}
-                {subtitle ? <p className="subtitle">{subtitle}</p> : null}
-              </div>
-              {actions ? <div className="actions-row">{actions}</div> : null}
-            </header>
-          ) : null}
+          <header className="page-header page-header-fixed">
+            <div>
+              {title ? <h2>{title}</h2> : null}
+              {subtitle ? <p className="subtitle">{subtitle}</p> : null}
+            </div>
+            {actions ? <div className="actions-row">{actions}</div> : null}
+          </header>
           <div className="page-content">{children}</div>
           {hideNavigation ? null : (
             <nav className="bottom-nav">

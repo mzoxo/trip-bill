@@ -1,12 +1,17 @@
 import { toNumber } from './format.js';
 
-export function calcOverview(records, suicaRecords) {
+export function calcOverview(records, suicaRecords, options = {}) {
+  const rateMap = options.rateMap ?? {};
+  const fallbackRate = toNumber(options.fallbackRate);
+  const baseYear = options.baseYear ?? new Date().getFullYear();
+
   const totals = records.reduce(
     (accumulator, record) => {
-      accumulator.totalJpy += toNumber(record.jpyAmount);
+      const twdCost = getEstimatedRecordTwdCost(record, rateMap, fallbackRate, baseYear);
+      accumulator.totalJpy += getRecordJpyAmount(record);
       accumulator.totalTwd += toNumber(record.twdAmount);
       accumulator.totalFee += toNumber(record.fee);
-      accumulator.totalCost += toNumber(record.twdTotal);
+      accumulator.totalCost += twdCost;
 
       const payment = record.payment || '未分類';
       const current = accumulator.byPayment[payment] ?? {
@@ -18,10 +23,10 @@ export function calcOverview(records, suicaRecords) {
       };
 
       current.count += 1;
-      current.totalJpy += toNumber(record.jpyAmount);
+      current.totalJpy += getRecordJpyAmount(record);
       current.totalTwd += toNumber(record.twdAmount);
       current.totalFee += toNumber(record.fee);
-      current.totalCost += toNumber(record.twdTotal);
+      current.totalCost += twdCost;
       accumulator.byPayment[payment] = current;
       return accumulator;
     },
@@ -45,4 +50,76 @@ export function calcOverview(records, suicaRecords) {
   );
 
   return totals;
+}
+
+export function getEstimatedRecordTwdCost(record, rateMap = {}, fallbackRate = 0, baseYear) {
+  if (usesDirectTwdAmount(record.payment)) {
+    return getRecordTwdAmount(record);
+  }
+
+  const rate = getRecordRate(record.date, rateMap, fallbackRate, baseYear);
+  return getRecordJpyAmount(record) * rate;
+}
+
+export function getRecordJpyAmount(record) {
+  return firstNonZero([
+    record.jpyAmount,
+    record.total,
+    record.jpyNet,
+  ]);
+}
+
+export function getRecordTwdAmount(record) {
+  return firstNonZero([
+    record.twdTotal,
+    record.twdAmount,
+    record.total,
+  ]);
+}
+
+export function usesDirectTwdAmount(payment) {
+  return [
+    '全盈+PAY',
+    '全盈+PAY玉山',
+    '全盈+PAY國泰',
+    '全支付',
+    '全支付國泰',
+  ].includes(payment);
+}
+
+export function getRecordRate(value, rateMap = {}, fallbackRate = 0, baseYear) {
+  const normalizedDate = normalizeRecordDate(value, baseYear);
+  if (!normalizedDate) {
+    return fallbackRate;
+  }
+
+  return toNumber(rateMap[normalizedDate]) || fallbackRate;
+}
+
+export function normalizeRecordDate(value, baseYear = new Date().getFullYear()) {
+  if (!value) {
+    return '';
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+
+  const match = String(value).match(/^(\d{2})\/(\d{2})/);
+  if (!match) {
+    return '';
+  }
+
+  return `${baseYear}-${match[1]}-${match[2]}`;
+}
+
+function firstNonZero(values) {
+  for (const value of values) {
+    const parsed = toNumber(value);
+    if (parsed !== 0) {
+      return parsed;
+    }
+  }
+
+  return 0;
 }

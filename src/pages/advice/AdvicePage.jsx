@@ -1,135 +1,130 @@
+import { RotateCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
-import { SectionCard, StatusBanner } from '../../shared/ui.jsx';
+import { StatusBanner } from '../../shared/ui.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import { getAppData } from '../../lib/gas/client.js';
+import { calcPaymentStatus } from '../../lib/domain/calcPaymentStatus.js';
 import { getPaymentAdvice } from '../../lib/domain/getPaymentAdvice.js';
 import { formatCurrency, formatPercent, toNumber } from '../../lib/domain/format.js';
 
 export function AdvicePage() {
   const [rules, setRules] = useState([]);
+  const [paymentStatuses, setPaymentStatuses] = useState([]);
   const [suicaRemainingJpy, setSuicaRemainingJpy] = useState(0);
+  const [latestRate, setLatestRate] = useState(0);
   const [message, setMessage] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [form, setForm] = useState({
-    amountTwd: '1000',
-    allowedPayments: [],
+    amountJpy: '1000',
   });
 
-  useEffect(() => {
-    async function load() {
-      if (!hasAppSettings()) {
-        window.location.href = '/settings.html';
-        return;
-      }
-
-      const settings = getAppSettings();
-      const result = await getAppData(settings.webAppUrl, settings.token);
-      setRules(result.data?.paymentRules ?? []);
-      setSuicaRemainingJpy(
-        (result.data?.suicaRecords ?? []).reduce(
-          (sum, record) => sum + toNumber(record.remainingJpy),
-          0,
-        ),
-      );
-      setMessage(result.message || '');
+  async function load(forceRefresh = false) {
+    if (!hasAppSettings()) {
+      window.location.href = '/settings.html';
+      return;
     }
 
+    const settings = getAppSettings();
+    const result = await getAppData(settings.webAppUrl, settings.token, { forceRefresh });
+    const nextRules = result.data?.paymentRules ?? [];
+    const nextShoppingRecords = result.data?.shoppingRecords ?? [];
+    const nextSuicaRecords = result.data?.suicaRecords ?? [];
+
+    setRules(nextRules);
+    setLatestRate(toNumber(result.data?.latestRate?.rate));
+    setPaymentStatuses(calcPaymentStatus(nextShoppingRecords, nextSuicaRecords, nextRules));
+    setSuicaRemainingJpy(
+      nextSuicaRecords.reduce(
+        (sum, record) => sum + toNumber(record.remainingJpy),
+        0,
+      ),
+    );
+    setMessage(result.message || '');
+  }
+
+  useEffect(() => {
     load();
   }, []);
 
+  async function handleRefresh() {
+    setIsRefreshing(true);
+    setMessage('重新抓取資料中...');
+    try {
+      await load(true);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }
+
   const adviceList = getPaymentAdvice({
-    amountTwd: form.amountTwd,
-    allowedPayments: form.allowedPayments,
+    amountJpy: form.amountJpy,
+    amountTwd: toNumber(form.amountJpy) * latestRate,
+    allowedPayments: [],
     rules,
     suicaRemainingJpy,
+    paymentStatuses,
   });
-
-  function togglePayment(plan) {
-    setForm((current) => {
-      const hasItem = current.allowedPayments.includes(plan);
-      return {
-        ...current,
-        allowedPayments: hasItem
-          ? current.allowedPayments.filter((item) => item !== plan)
-          : [...current.allowedPayments, plan],
-      };
-    });
-  }
 
   return (
     <AppShell
-      title="支付建議"
+      title="建議"
       subtitle=""
       currentPath="/advice.html"
+      actions={(
+        <button
+          type="button"
+          className={isRefreshing ? 'icon-button is-spinning' : 'icon-button'}
+          aria-label="重新抓取資料"
+          title="重新抓取資料"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+        >
+          <RotateCw size={16} strokeWidth={2.2} />
+        </button>
+      )}
     >
       {message ? <StatusBanner>{message}</StatusBanner> : null}
-      <section className="grid dual-grid">
-        <SectionCard title="試算條件">
-          <div className="form-grid">
-            <div className="field is-full">
-              <label htmlFor="amountTwd">預估台幣金額</label>
-              <input
-                id="amountTwd"
-                type="number"
-                min="0"
-                value={form.amountTwd}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, amountTwd: event.target.value }))
-                }
-              />
-            </div>
+      <section className="advice-input-row">
+        <div className="field field-floating is-full">
+          <div className="floating-input-wrap">
+            <input
+              id="amountJpy"
+              type="number"
+              min="0"
+              placeholder=" "
+              value={form.amountJpy}
+              onChange={(event) =>
+                setForm((current) => ({ ...current, amountJpy: event.target.value }))
+              }
+            />
+            <label htmlFor="amountJpy">日幣金額</label>
           </div>
-          <div style={{ marginTop: 16 }}>
-            <p className="field-hint">可用支付方式</p>
-            <div className="pill-list">
-              {rules.map((rule) => (
-                <button
-                  key={rule.paymentPlan}
-                  type="button"
-                  className="button button-secondary"
-                  onClick={() => togglePayment(rule.paymentPlan)}
-                >
-                  {form.allowedPayments.includes(rule.paymentPlan) ? '已選' : '可選'} {rule.paymentPlan}
-                </button>
-              ))}
-            </div>
-          </div>
-        </SectionCard>
-
-        <SectionCard title="目前條件">
-          <div className="pill-list">
-            <span className="pill">Suica {formatCurrency(suicaRemainingJpy, 'JPY')}</span>
-            <span className="pill">單筆試算 {formatCurrency(form.amountTwd, 'TWD')}</span>
-            <span className="pill">規則數量 {rules.length}</span>
-          </div>
-        </SectionCard>
+        </div>
       </section>
-
-      <section style={{ marginTop: 18 }}>
-        <SectionCard title="推薦順序">
-          <div className="advice-list">
-            {adviceList.map((item, index) => (
-              <article className="advice-item" key={item.paymentPlan}>
+      <section className="advice-section">
+        <div className="advice-section-head">
+          <h3>推薦順序</h3>
+          <span className="advice-section-meta">
+            {formatCurrency(form.amountJpy, 'JPY')} / {formatCurrency(toNumber(form.amountJpy) * latestRate, 'TWD')}
+          </span>
+        </div>
+        <div className="advice-list">
+          {adviceList.map((item, index) => (
+            <article className="advice-item" key={item.paymentPlan}>
+              <div className="advice-rank">#{index + 1}</div>
+              <div className="advice-item-body">
                 <div className="advice-head">
-                  <strong>
-                    #{index + 1} {item.paymentPlan}
-                  </strong>
-                  <span>
-                    {formatPercent(item.effectiveRewardRate)} / 預估回饋{' '}
-                    {formatCurrency(item.reward, 'TWD')}
-                  </span>
+                  <div className="advice-title-block">
+                    <strong>{item.paymentPlan}</strong>
+                    <span>{formatCurrency(item.reward, 'TWD')} 回饋</span>
+                  </div>
+                  <span className="advice-rate">{formatPercent(item.effectiveRewardRate)}</span>
                 </div>
-                <div className="advice-reasons">
-                  {item.reasons.map((reason) => (
-                    <span className="pill" key={`${item.paymentPlan}-${reason}`}>
-                      {reason}
-                    </span>
-                  ))}
-                </div>
-              </article>
-            ))}
-          </div>
-        </SectionCard>
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
     </AppShell>
   );
