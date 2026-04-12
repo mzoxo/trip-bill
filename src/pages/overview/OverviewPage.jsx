@@ -210,7 +210,11 @@ export function OverviewPage() {
                   </header>
                   <div className="record-list">
                     {group.records.map((record, index) => (
-                      <article className="record-item" key={`${group.date}-${record.store}-${index}`}>
+                      <a
+                        className="record-item record-item-link"
+                        href={`/record.html?row=${record.rowNumber}`}
+                        key={record.rowNumber ?? `${group.date}-${record.store}-${index}`}
+                      >
                         <div className="record-main">
                           <div className="record-icon">{getCategoryIcon(record.category)}</div>
                           <div>
@@ -229,14 +233,14 @@ export function OverviewPage() {
                           </div>
                         </div>
                         <div className="record-amounts">
-                            <strong className="record-amount">
+                          <strong className="record-amount">
                             {formatPrimaryAmount(record, state.rateMap, state.rateInfo?.rate)}
                           </strong>
                           <span className="record-amount-sub">
                             {formatSecondaryAmount(record)}
                           </span>
                         </div>
-                      </article>
+                      </a>
                     ))}
                   </div>
                 </section>

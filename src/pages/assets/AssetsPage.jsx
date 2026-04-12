@@ -6,6 +6,7 @@ import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import { getAppData, updatePaymentRuleEnabled } from '../../lib/gas/client.js';
 import { calcPaymentStatus } from '../../lib/domain/calcPaymentStatus.js';
 import { formatCurrency, formatPercent, toNumber } from '../../lib/domain/format.js';
+import { normalizeRecordDate } from '../../lib/domain/calcOverview.js';
 
 export function AssetsPage() {
   const [state, setState] = useState({
@@ -33,7 +34,14 @@ export function AssetsPage() {
     const shoppingRecords = result.data?.shoppingRecords ?? [];
     const suicaRecords = result.data?.suicaRecords ?? [];
     const paymentRules = result.data?.paymentRules ?? [];
-    const statuses = calcPaymentStatus(shoppingRecords, suicaRecords, paymentRules)
+    const latestRate = toNumber(result.data?.latestRate?.rate);
+    const rateMap = createRateMap(result.data?.rateHistory ?? []);
+    const baseYear = getBaseYear(result.data?.latestRate?.date);
+    const statuses = calcPaymentStatus(shoppingRecords, suicaRecords, paymentRules, {
+      rateMap,
+      fallbackRate: latestRate,
+      baseYear,
+    })
       .sort((left, right) => right.usedTwd - left.usedTwd);
 
     setState({
@@ -45,7 +53,7 @@ export function AssetsPage() {
         (sum, record) => sum + toNumber(record.remainingJpy),
         0,
       ),
-      latestRate: toNumber(result.data?.latestRate?.rate),
+      latestRate,
       paymentRules,
     });
   }
@@ -159,6 +167,17 @@ export function AssetsPage() {
               <article
                 className={isOverLimit(item) ? 'assets-usage-card is-danger' : 'assets-usage-card'}
                 key={item.paymentPlan}
+                role="link"
+                tabIndex={0}
+                onClick={() => {
+                  window.location.href = `/payment.html?payment=${encodeURIComponent(item.paymentPlan)}`;
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    window.location.href = `/payment.html?payment=${encodeURIComponent(item.paymentPlan)}`;
+                  }
+                }}
               >
                 <div className="assets-usage-head">
                   <div className="assets-usage-title">
@@ -183,6 +202,7 @@ export function AssetsPage() {
                             rel="noreferrer"
                             aria-label={`${item.paymentPlan} 額滿公告`}
                             title="額滿公告"
+                            onClick={(event) => event.stopPropagation()}
                           >
                             <ExternalLink size={14} strokeWidth={2.2} />
                           </a>
@@ -306,4 +326,22 @@ function getIconRingClassName(item) {
 
 function getCurrentRuleEnabled(paymentPlan, rules) {
   return rules.find((rule) => rule.paymentPlan === paymentPlan)?.enabled !== false;
+}
+
+function createRateMap(rateHistory) {
+  return rateHistory.reduce((accumulator, item) => {
+    const normalizedDate = normalizeRecordDate(item.date, getBaseYear(item.date));
+    if (normalizedDate && item.rate) {
+      accumulator[normalizedDate] = toNumber(item.rate);
+    }
+    return accumulator;
+  }, {});
+}
+
+function getBaseYear(dateText) {
+  if (dateText && /^\d{4}-\d{2}-\d{2}$/.test(dateText)) {
+    return Number(dateText.slice(0, 4));
+  }
+
+  return new Date().getFullYear();
 }

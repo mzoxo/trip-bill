@@ -1,3 +1,4 @@
+import { getEstimatedRecordTwdCost } from './calcOverview.js';
 import { toNumber } from './format.js';
 
 function clampRemaining(limit, used) {
@@ -8,7 +9,11 @@ function clampRemaining(limit, used) {
   return Math.max(toNumber(limit) - toNumber(used), 0);
 }
 
-export function calcPaymentStatus(records, suicaRecords, rules) {
+export function calcPaymentStatus(records, suicaRecords, rules, options = {}) {
+  const rateMap = options.rateMap ?? {};
+  const fallbackRate = toNumber(options.fallbackRate);
+  const baseYear = options.baseYear ?? new Date().getFullYear();
+
   const usageByPayment = records.reduce((accumulator, record) => {
     const payment = record.payment || '未分類';
     const current = accumulator[payment] ?? {
@@ -16,7 +21,7 @@ export function calcPaymentStatus(records, suicaRecords, rules) {
       recordCount: 0,
       maxSingleSpentTwd: 0,
     };
-    const recordCost = toNumber(record.twdTotal || record.twdAmount);
+    const recordCost = getEstimatedRecordTwdCost(record, rateMap, fallbackRate, baseYear);
 
     current.usedTwd += recordCost;
     current.recordCount += 1;

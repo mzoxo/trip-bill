@@ -10,6 +10,8 @@ export default defineConfig({
         assets: 'assets.html',
         advice: 'advice.html',
         ledger: 'ledger.html',
+        payment: 'payment.html',
+        record: 'record.html',
         settings: 'settings.html',
       },
     },
