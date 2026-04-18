@@ -1,4 +1,3 @@
-import { RotateCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import breadIcon from '../../assets/openmoji/bread.svg';
 import candyIcon from '../../assets/openmoji/candy.svg';
@@ -19,11 +18,13 @@ import tshirtIcon from '../../assets/openmoji/t-shirt.svg';
 import ticketsIcon from '../../assets/openmoji/tickets.svg';
 import trainIcon from '../../assets/openmoji/train.svg';
 import { AppShell } from '../../shared/AppShell.jsx';
-import { CategoryChip, HeaderIconButton, PanelCard, RecordListLink, StatusBanner } from '../../shared/ui.jsx';
+import { CategoryChip, PanelCard, RecordListLink, RefreshButton, StatusBanner } from '../../shared/ui.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import { getAppData } from '../../lib/gas/client.js';
 import {
   calcOverview,
+  createRateMap,
+  getBaseYear,
   getEstimatedRecordTwdCost,
   getRecordJpyAmount,
   normalizeRecordDate,
@@ -133,16 +134,7 @@ export function OverviewPage() {
       )}
       subtitle=""
       currentPath="/index.html"
-      actions={(
-        <HeaderIconButton
-          aria-label="重新抓取資料"
-          title="重新抓取資料"
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-        >
-          <RotateCw className={isRefreshing ? 'animate-spin' : ''} size={16} strokeWidth={2.2} />
-        </HeaderIconButton>
-      )}
+      actions={<RefreshButton isRefreshing={isRefreshing} onRefresh={handleRefresh} />}
     >
       {state.message ? <StatusBanner>{state.message}</StatusBanner> : null}
       {state.loading || !overview ? (
@@ -155,7 +147,7 @@ export function OverviewPage() {
                 className={ringClassName}
                 style={{ '--budget-progress': `${ringProgress}%` }}
               >
-                <span>{progress}%</span>
+                <span className="relative z-[1]">{progress}%</span>
               </div>
               <div className="grid min-w-0 flex-1 grid-cols-2">
                 <div className="grid gap-[6px]">
@@ -309,24 +301,6 @@ function formatPrimaryAmount(record, rateMap, fallbackRate) {
 
 function formatSecondaryAmount(record) {
   return formatCurrency(getRecordJpyAmount(record), 'JPY');
-}
-
-function createRateMap(rateHistory) {
-  return rateHistory.reduce((accumulator, item) => {
-    const normalizedDate = normalizeRecordDate(item.date, getBaseYear(item.date));
-    if (normalizedDate && item.rate) {
-      accumulator[normalizedDate] = toNumber(item.rate);
-    }
-    return accumulator;
-  }, {});
-}
-
-function getBaseYear(dateText) {
-  if (dateText && /^\d{4}-\d{2}-\d{2}$/.test(dateText)) {
-    return Number(dateText.slice(0, 4));
-  }
-
-  return new Date().getFullYear();
 }
 
 function getBudgetRingClassName(totalCost, overspend) {

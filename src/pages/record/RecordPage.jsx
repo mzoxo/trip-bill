@@ -1,16 +1,17 @@
-import { RotateCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
 import {
   DANGER_BLOCK_BUTTON_CLASS_NAME,
-  FloatingSelect,
-  HeaderIconButton,
   PRIMARY_BLOCK_BUTTON_CLASS_NAME,
-  SegmentedControl,
+  RefreshButton,
+  SaveOverlay,
   StickySubmitBar,
   StatusBanner,
-  TEXT_INPUT_CLASS_NAME,
 } from '../../shared/ui.jsx';
+import {
+  CategoryChipsSection,
+  ShoppingFormFields,
+} from '../../shared/entryForm.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import {
   deleteShoppingRecord,
@@ -18,14 +19,6 @@ import {
   updateShoppingRecord,
 } from '../../lib/gas/client.js';
 
-const TRIP_DATE_OPTIONS = ['04/21(二)', '04/22(三)', '04/23(四)', '04/24(五)', '04/25(六)'];
-const TAX_OPTIONS = ['8%', '10%'];
-const FIELD_CLASS_NAME = 'grid gap-2';
-const INPUT_CLASS_NAME = TEXT_INPUT_CLASS_NAME;
-const FLOATING_FIELD_CLASS_NAME = 'grid gap-0';
-const FLOATING_WRAP_CLASS_NAME = 'relative';
-const FLOATING_LABEL_CLASS_NAME = 'pointer-events-none absolute left-[14px] top-1/2 -translate-y-1/2 rounded-full bg-white px-1 text-[14px] font-semibold text-[var(--muted)] transition-all duration-150';
-const FLOATING_INPUT_CLASS_NAME = `${INPUT_CLASS_NAME} peer`;
 
 function createInitialForm() {
   return {
@@ -183,87 +176,48 @@ export function RecordPage() {
     }
   }
 
+  const selectedPaymentRule = paymentRules.find((rule) => rule.paymentPlan === form.payment);
+  const shouldShowTwdAmount = selectedPaymentRule?.paymentType === 'paypay';
+
+  function handleJpyNetChange(value) { setForm((c) => ({ ...c, jpyNet: value })); }
+  function handleTaxChange(value) { setForm((c) => ({ ...c, tax: c.tax === value ? '' : value })); }
+  function handleJpyAmountChange(value) { setForm((c) => ({ ...c, jpyAmount: value })); }
+  function handleQuantityChange(value) { setForm((c) => ({ ...c, quantity: value })); }
+  function handleTotalChange(value) { setForm((c) => ({ ...c, total: value })); }
+
   return (
     <AppShell
       backHref="/index.html"
       title="編輯交易"
       currentPath=""
       hideNavigation
-      actions={(
-        <HeaderIconButton
-          aria-label="重新抓取資料"
-          title="重新抓取資料"
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-        >
-          <RotateCw className={isRefreshing ? 'animate-spin' : ''} size={16} strokeWidth={2.2} />
-        </HeaderIconButton>
-      )}
+      actions={<RefreshButton isRefreshing={isRefreshing} onRefresh={handleRefresh} />}
     >
+      {(isSaving || isDeleting) ? (
+        <SaveOverlay>{isDeleting ? '刪除中...' : '儲存中...'}</SaveOverlay>
+      ) : null}
       {message ? <StatusBanner>{message}</StatusBanner> : null}
       {isLoading ? (
         <StatusBanner tone="neutral">正在整理資料...</StatusBanner>
       ) : (
         <form className="grid gap-[14px]" onSubmit={handleSubmit}>
-          <section className="grid gap-3">
-            <div className="grid grid-cols-2 gap-3">
-              <FloatingSelect
-                id="record-date"
-                label="日期"
-                value={form.date}
-                onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))}
-              >
-                  {TRIP_DATE_OPTIONS.map((option) => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-              </FloatingSelect>
-              <FloatingSelect
-                id="record-payment"
-                label="支付"
-                value={form.payment}
-                onChange={(event) => setForm((current) => ({ ...current, payment: event.target.value }))}
-              >
-                  {paymentRules.map((rule) => (
-                    <option key={rule.paymentPlan} value={rule.paymentPlan}>{rule.paymentPlan}</option>
-                  ))}
-              </FloatingSelect>
-            </div>
-          </section>
-
-          <section className="grid gap-3">
-            <div className="grid gap-3">
-              {renderFloatingInput('store', '商店', form, setForm)}
-              {renderFloatingInput('category', '屬性', form, setForm)}
-              {renderFloatingInput('name', '名稱', form, setForm)}
-              {renderFloatingInput('japaneseName', '日文', form, setForm)}
-            </div>
-          </section>
-
-          <section className="grid gap-3">
-            <div className="grid gap-3 md:grid-cols-2">
-              {renderFloatingInput('quantity', '數量', form, setForm, 'number')}
-              {renderFloatingInput('total', '日幣總計', form, setForm, 'number')}
-            </div>
-            <div className="grid items-start gap-3 grid-cols-[minmax(0,1fr)_108px_minmax(0,1fr)]">
-              {renderFloatingInput('jpyNet', '日幣未稅', form, setForm, 'number')}
-              <div className={`${FIELD_CLASS_NAME} min-w-[108px]`}>
-                <SegmentedControl
-                  ariaLabel="稅"
-                  options={TAX_OPTIONS.map((option) => ({ value: option, label: option }))}
-                  value={form.tax}
-                  onChange={(option) => setForm((current) => ({
-                    ...current,
-                    tax: current.tax === option ? '' : option,
-                  }))}
-                />
-              </div>
-              {renderFloatingInput('jpyAmount', '日幣金額', form, setForm, 'number')}
-            </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              {renderFloatingInput('twdAmount', '台幣', form, setForm, 'number')}
-              {renderFloatingInput('twdTotal', '台幣總計', form, setForm, 'number')}
-            </div>
-          </section>
+          <ShoppingFormFields
+            form={form}
+            setForm={setForm}
+            paymentRules={paymentRules}
+            onJpyNetChange={handleJpyNetChange}
+            onTaxChange={handleTaxChange}
+            onJpyAmountChange={handleJpyAmountChange}
+            onQuantityChange={handleQuantityChange}
+            onTotalChange={handleTotalChange}
+            shouldShowTwdAmount={shouldShowTwdAmount}
+            categorySection={(
+              <CategoryChipsSection
+                value={form.category}
+                onChange={(v) => setForm((c) => ({ ...c, category: v }))}
+              />
+            )}
+          />
 
           <StickySubmitBar className="grid grid-cols-[auto_minmax(0,1fr)] gap-[10px]">
             <button
@@ -285,23 +239,5 @@ export function RecordPage() {
         </form>
       )}
     </AppShell>
-  );
-}
-
-function renderFloatingInput(key, label, values, setValues, type = 'text') {
-  return (
-    <div className={FLOATING_FIELD_CLASS_NAME} key={key}>
-      <div className={FLOATING_WRAP_CLASS_NAME}>
-        <input
-          className={FLOATING_INPUT_CLASS_NAME}
-          id={key}
-          type={type}
-          value={values[key] ?? ''}
-          placeholder=" "
-          onChange={(event) => setValues((current) => ({ ...current, [key]: event.target.value }))}
-        />
-        <label className={`${FLOATING_LABEL_CLASS_NAME} peer-focus:top-0 peer-focus:text-[12px] peer-focus:text-[var(--accent)] peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-[12px] peer-[:not(:placeholder-shown)]:text-[var(--accent)]`} htmlFor={key}>{label}</label>
-      </div>
-    </div>
   );
 }

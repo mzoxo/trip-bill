@@ -1,82 +1,27 @@
-import { RotateCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
 import {
   FloatingSelect,
-  HeaderIconButton,
   PRIMARY_BLOCK_BUTTON_CLASS_NAME,
-  SegmentedControl,
+  RefreshButton,
+  SaveOverlay,
   StickySubmitBar,
   StatusBanner,
-  TEXT_INPUT_CLASS_NAME,
 } from '../../shared/ui.jsx';
+import {
+  CategoryChipsSection,
+  EntryFormSection,
+  EntryTwoColumnRow,
+  FloatingInput,
+  ShoppingFormFields,
+} from '../../shared/entryForm.jsx';
+import { TRIP_DATE_OPTIONS } from '../../lib/constants/trip.js';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import {
   createShoppingRecord,
   createSuicaRecord,
   getAppData,
 } from '../../lib/gas/client.js';
-import breadIcon from '../../assets/openmoji/bread.svg';
-import candyIcon from '../../assets/openmoji/candy.svg';
-import cookieIcon from '../../assets/openmoji/cookie.svg';
-import drinkIcon from '../../assets/openmoji/drink.svg';
-import electricPlugIcon from '../../assets/openmoji/electric-plug.svg';
-import framedPictureIcon from '../../assets/openmoji/framed-picture.svg';
-import giftIcon from '../../assets/openmoji/gift.svg';
-import glassesIcon from '../../assets/openmoji/glasses.svg';
-import hamburgerIcon from '../../assets/openmoji/hamburger.svg';
-import handbagIcon from '../../assets/openmoji/handbag.svg';
-import lipstickIcon from '../../assets/openmoji/lipstick.svg';
-import potOfFoodIcon from '../../assets/openmoji/pot-of-food.svg';
-import prayerBeadsIcon from '../../assets/openmoji/prayer-beads.svg';
-import shoppingBagsIcon from '../../assets/openmoji/shopping-bags.svg';
-import shortcakeIcon from '../../assets/openmoji/shortcake.svg';
-import tshirtIcon from '../../assets/openmoji/t-shirt.svg';
-import ticketsIcon from '../../assets/openmoji/tickets.svg';
-import trainIcon from '../../assets/openmoji/train.svg';
-
-const TRIP_DATE_OPTIONS = [
-  { value: '04/21(二)', label: '04/21(二)' },
-  { value: '04/22(三)', label: '04/22(三)' },
-  { value: '04/23(四)', label: '04/23(四)' },
-  { value: '04/24(五)', label: '04/24(五)' },
-  { value: '04/25(六)', label: '04/25(六)' },
-];
-
-const TAX_OPTIONS = [
-  { value: '8%', label: '8%' },
-  { value: '10%', label: '10%' },
-];
-
-const CATEGORY_OPTIONS = [
-  { label: '食物', icon: hamburgerIcon },
-  { label: '甜食', icon: shortcakeIcon },
-  { label: '交通', icon: trainIcon },
-  { label: '衣物', icon: tshirtIcon },
-  { label: '飲料', icon: drinkIcon },
-  { label: '餅乾', icon: cookieIcon },
-  { label: '糖果', icon: candyIcon },
-  { label: '伴手禮', icon: giftIcon },
-  { label: '生活用品', icon: shoppingBagsIcon },
-  { label: '藥妝', icon: lipstickIcon },
-  { label: '眼鏡', icon: glassesIcon },
-  { label: '門票', icon: ticketsIcon },
-  { label: '紀念品', icon: framedPictureIcon },
-  { label: '麵包', icon: breadIcon },
-  { label: '食材', icon: potOfFoodIcon },
-  { label: '包包', icon: handbagIcon },
-  { label: '電器', icon: electricPlugIcon },
-  { label: '代買', icon: shoppingBagsIcon },
-  { label: '上供', icon: prayerBeadsIcon }
-];
-
-const FIELD_CLASS_NAME = 'grid gap-2';
-const INPUT_CLASS_NAME = TEXT_INPUT_CLASS_NAME;
-const FLOATING_FIELD_CLASS_NAME = 'grid gap-0';
-const FLOATING_WRAP_CLASS_NAME = 'relative';
-const FLOATING_LABEL_CLASS_NAME = 'pointer-events-none absolute left-[14px] top-1/2 -translate-y-1/2 rounded-full bg-white px-1 text-[14px] font-semibold text-[var(--muted)] transition-all duration-150';
-const FLOATING_INPUT_CLASS_NAME = `${INPUT_CLASS_NAME} peer`;
-
 function createShoppingInitialState(payment = 'Suica') {
   return {
     date: getDefaultTripDate(),
@@ -85,7 +30,7 @@ function createShoppingInitialState(payment = 'Suica') {
     category: '',
     store: '',
     name: '',
-    nameJa: '',
+    japaneseName: '',
     quantity: '1',
     total: '',
     jpyNet: '',
@@ -136,78 +81,6 @@ function getDefaultPayment(paymentRules) {
   return plans.find((plan) => plan === 'Suica') ?? plans[0] ?? 'Suica';
 }
 
-function renderDateSelect(id, value, onChange) {
-  return (
-    <FloatingSelect
-      className="min-w-0"
-      id={id}
-      label="日期"
-      value={value}
-      onChange={onChange}
-    >
-      {TRIP_DATE_OPTIONS.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </FloatingSelect>
-  );
-}
-
-function renderInput(label, key, values, setValues, type = 'text', options = []) {
-  return (
-    <div className={type === 'select' ? FIELD_CLASS_NAME : FLOATING_FIELD_CLASS_NAME} key={key}>
-      {type === 'select' ? (
-        <>
-          <label className="font-bold text-[var(--text)]" htmlFor={key}>{label}</label>
-          <select
-            className={INPUT_CLASS_NAME}
-            id={key}
-            value={values[key]}
-            onChange={(event) => setValues((current) => ({ ...current, [key]: event.target.value }))}
-          >
-            {options.map((option) => (
-              <option key={option.label} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </>
-      ) : (
-        <div className={FLOATING_WRAP_CLASS_NAME}>
-          <input
-            className={FLOATING_INPUT_CLASS_NAME}
-            id={key}
-            type={type}
-            value={values[key]}
-            placeholder=" "
-            onChange={(event) => setValues((current) => ({ ...current, [key]: event.target.value }))}
-          />
-          <label className={`${FLOATING_LABEL_CLASS_NAME} peer-focus:top-0 peer-focus:text-[12px] peer-focus:text-[var(--accent)] peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-[12px] peer-[:not(:placeholder-shown)]:text-[var(--accent)]`} htmlFor={key}>{label}</label>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function renderFloatingManualInput({ id, label, value, onChange, type = 'number' }) {
-  return (
-    <div className={FLOATING_FIELD_CLASS_NAME}>
-      <div className={FLOATING_WRAP_CLASS_NAME}>
-        <input
-          className={FLOATING_INPUT_CLASS_NAME}
-          id={id}
-          type={type}
-          value={value}
-          placeholder=" "
-          onChange={onChange}
-        />
-        <label className={`${FLOATING_LABEL_CLASS_NAME} peer-focus:top-0 peer-focus:text-[12px] peer-focus:text-[var(--accent)] peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-[12px] peer-[:not(:placeholder-shown)]:text-[var(--accent)]`} htmlFor={id}>{label}</label>
-      </div>
-    </div>
-  );
-}
-
 function calculateTaxIncludedAmount(jpyNet, tax) {
   const base = Number(jpyNet);
   if (!Number.isFinite(base) || base <= 0) {
@@ -231,7 +104,6 @@ function calculateLineTotal(quantity, amount) {
 export function LedgerPage() {
   const [settings, setSettings] = useState({ webAppUrl: '' });
   const [entryTab, setEntryTab] = useState('shopping');
-  const [showAllCategories, setShowAllCategories] = useState(false);
   const [shoppingForm, setShoppingForm] = useState(() => createShoppingInitialState());
   const [shoppingCalcState, setShoppingCalcState] = useState(() => createShoppingCalculationState());
   const [suicaForm, setSuicaForm] = useState(() => createSuicaInitialState());
@@ -279,6 +151,31 @@ export function LedgerPage() {
     };
   }, []);
 
+  function handleJpyNetChange(value) {
+    setShoppingCalcState((c) => ({ ...c, isJpyAmountManual: false, isTotalManual: false }));
+    setShoppingForm((c) => ({ ...c, jpyNet: value }));
+  }
+
+  function handleTaxChange(value) {
+    setShoppingCalcState((c) => ({ ...c, isJpyAmountManual: false, isTotalManual: false }));
+    setShoppingForm((c) => ({ ...c, tax: c.tax === value ? '' : value }));
+  }
+
+  function handleJpyAmountChange(value) {
+    setShoppingCalcState((c) => ({ ...c, isJpyAmountManual: true, isTotalManual: false }));
+    setShoppingForm((c) => ({ ...c, jpyAmount: value }));
+  }
+
+  function handleQuantityChange(value) {
+    setShoppingCalcState((c) => ({ ...c, isTotalManual: false }));
+    setShoppingForm((c) => ({ ...c, quantity: value }));
+  }
+
+  function handleTotalChange(value) {
+    setShoppingCalcState((c) => ({ ...c, isTotalManual: true }));
+    setShoppingForm((c) => ({ ...c, total: value }));
+  }
+
   async function handleRefresh() {
     setIsRefreshing(true);
     setMessage('重新抓取資料中...');
@@ -316,6 +213,7 @@ export function LedgerPage() {
     shoppingForm.jpyNet,
     shoppingForm.tax,
     shoppingForm.quantity,
+    shoppingForm.jpyAmount,
     shoppingCalcState.isJpyAmountManual,
     shoppingCalcState.isTotalManual,
   ]);
@@ -375,9 +273,6 @@ export function LedgerPage() {
     }
   }
 
-  const visibleCategories = showAllCategories
-    ? CATEGORY_OPTIONS
-    : CATEGORY_OPTIONS.slice(0, 8);
   const selectedPaymentRule = paymentRules.find((rule) => rule.paymentPlan === shoppingForm.payment);
   const shouldShowTwdAmount = selectedPaymentRule?.paymentType === 'paypay';
 
@@ -388,17 +283,11 @@ export function LedgerPage() {
       subtitle=""
       currentPath="/ledger.html"
       hideNavigation
-      actions={(
-        <HeaderIconButton
-          aria-label="重新抓取資料"
-          title="重新抓取資料"
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-        >
-          <RotateCw className={isRefreshing ? 'animate-spin' : ''} size={16} strokeWidth={2.2} />
-        </HeaderIconButton>
-      )}
+      actions={<RefreshButton isRefreshing={isRefreshing} onRefresh={handleRefresh} />}
     >
+      {(isSavingShopping || isSavingSuica) ? (
+        <SaveOverlay>{isSavingShopping ? '一般消費送出中...' : 'Suica 儲值送出中...'}</SaveOverlay>
+      ) : null}
       {message ? <StatusBanner>{message}</StatusBanner> : null}
 
       <section className="grid grid-cols-2 gap-[6px] rounded-[12px] border border-[var(--line)] bg-white p-1" role="tablist" aria-label="記帳模式">
@@ -421,163 +310,23 @@ export function LedgerPage() {
       {entryTab === 'shopping' ? (
         <section className="grid gap-[14px]">
           <form className="grid gap-[14px]" onSubmit={handleShoppingSubmit}>
-            <section className="grid gap-3">
-              <div className="grid grid-cols-2 gap-3">
-                {renderDateSelect(
-                  'shopping-date',
-                  shoppingForm.date,
-                  (event) => setShoppingForm((current) => ({ ...current, date: event.target.value })),
-                )}
-                <FloatingSelect
-                  className="min-w-0"
-                  id="payment"
-                  label="支付"
-                  value={shoppingForm.payment}
-                  onChange={(event) =>
-                    setShoppingForm((current) => ({ ...current, payment: event.target.value }))
-                  }
-                >
-                    {paymentRules.length === 0 ? (
-                      <option value="Suica">Suica</option>
-                    ) : (
-                      paymentRules.map((rule) => (
-                        <option key={rule.paymentPlan} value={rule.paymentPlan}>
-                          {rule.paymentPlan}
-                        </option>
-                      ))
-                    )}
-                </FloatingSelect>
-              </div>
-            </section>
-
-            <section className="grid gap-3">
-              <div className="flex items-center justify-between gap-3">
-                <strong>屬性</strong>
-                {CATEGORY_OPTIONS.length > 8 ? (
-                  <button
-                    type="button"
-                    className="border-0 bg-transparent text-[13px] font-bold text-[var(--accent)]"
-                    onClick={() => setShowAllCategories((current) => !current)}
-                  >
-                    {showAllCategories ? '收合' : '更多'}
-                  </button>
-                ) : null}
-              </div>
-              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="屬性">
-                {visibleCategories.map((option) => {
-                  const isSelected = shoppingForm.category === option.label;
-                  return (
-                    <button
-                      key={option.label}
-                      type="button"
-                      className={isSelected ? 'inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--accent)] bg-[var(--accent-soft)] px-3 py-2 text-[14px] leading-none text-[var(--accent-deep)]' : 'inline-flex min-h-10 items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-3 py-2 text-[14px] leading-none text-[#4b5563]'}
-                      aria-pressed={isSelected}
-                      onClick={() =>
-                        setShoppingForm((current) => ({
-                          ...current,
-                          category: current.category === option.label ? '' : option.label,
-                        }))
-                      }
-                    >
-                      <img className="h-5 w-5 shrink-0" src={option.icon} alt="" aria-hidden="true" />
-                      <span>{option.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-
-            <section className="grid gap-3">
-              <div className="grid gap-3">
-                {renderInput('商店', 'store', shoppingForm, setShoppingForm)}
-                {renderInput('名稱', 'name', shoppingForm, setShoppingForm)}
-                {renderInput('日文', 'nameJa', shoppingForm, setShoppingForm)}
-              </div>
-            </section>
-
-            <section className="grid gap-3">
-              <div className="grid items-start gap-3 grid-cols-[minmax(0,1fr)_108px_minmax(0,1fr)]">
-                {renderFloatingManualInput({
-                  id: 'jpyNet',
-                  label: '日幣未稅',
-                  value: shoppingForm.jpyNet,
-                  onChange: (event) => {
-                    const value = event.target.value;
-                    setShoppingCalcState((current) => ({
-                      ...current,
-                      isJpyAmountManual: false,
-                      isTotalManual: false,
-                    }));
-                    setShoppingForm((current) => ({ ...current, jpyNet: value }));
-                  },
-                })}
-                <div className={`${FIELD_CLASS_NAME} min-w-[108px]`}>
-                  <SegmentedControl
-                    ariaLabel="稅"
-                    options={TAX_OPTIONS}
-                    value={shoppingForm.tax}
-                    onChange={(nextValue) => {
-                      setShoppingCalcState((current) => ({
-                        ...current,
-                        isJpyAmountManual: false,
-                        isTotalManual: false,
-                      }));
-                      setShoppingForm((current) => ({
-                        ...current,
-                        tax: current.tax === nextValue ? '' : nextValue,
-                      }));
-                    }}
-                  />
-                </div>
-                {renderFloatingManualInput({
-                  id: 'jpyAmount',
-                  label: '日幣金額',
-                  value: shoppingForm.jpyAmount,
-                  onChange: (event) => {
-                    const value = event.target.value;
-                    setShoppingCalcState((current) => ({
-                      ...current,
-                      isJpyAmountManual: true,
-                      isTotalManual: false,
-                    }));
-                    setShoppingForm((current) => ({ ...current, jpyAmount: value }));
-                  },
-                })}
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {renderFloatingManualInput({
-                  id: 'quantity',
-                  label: '數量',
-                  value: shoppingForm.quantity,
-                  onChange: (event) => {
-                    const value = event.target.value;
-                    setShoppingCalcState((current) => ({
-                      ...current,
-                      isTotalManual: false,
-                    }));
-                    setShoppingForm((current) => ({ ...current, quantity: value }));
-                  },
-                })}
-                {renderFloatingManualInput({
-                  id: 'total',
-                  label: '日幣總計',
-                  value: shoppingForm.total,
-                  onChange: (event) => {
-                    const value = event.target.value;
-                    setShoppingCalcState((current) => ({
-                      ...current,
-                      isTotalManual: true,
-                    }));
-                    setShoppingForm((current) => ({ ...current, total: value }));
-                  },
-                })}
-              </div>
-              {shouldShowTwdAmount ? (
-                <div className="grid gap-3 md:grid-cols-2">
-                  {renderInput('台幣', 'twdAmount', shoppingForm, setShoppingForm, 'number')}
-                </div>
-              ) : null}
-            </section>
+            <ShoppingFormFields
+              form={shoppingForm}
+              setForm={setShoppingForm}
+              paymentRules={paymentRules}
+              onJpyNetChange={handleJpyNetChange}
+              onTaxChange={handleTaxChange}
+              onJpyAmountChange={handleJpyAmountChange}
+              onQuantityChange={handleQuantityChange}
+              onTotalChange={handleTotalChange}
+              shouldShowTwdAmount={shouldShowTwdAmount}
+              categorySection={(
+                <CategoryChipsSection
+                  value={shoppingForm.category}
+                  onChange={(v) => setShoppingForm((c) => ({ ...c, category: v }))}
+                />
+              )}
+            />
 
             <StickySubmitBar>
               <button className={PRIMARY_BLOCK_BUTTON_CLASS_NAME} type="submit" disabled={isSavingShopping}>
@@ -589,22 +338,30 @@ export function LedgerPage() {
       ) : (
         <section className="grid gap-[14px]">
           <form className="grid gap-[14px]" onSubmit={handleSuicaSubmit}>
-            <section className="grid gap-3">
-              <div className="grid grid-cols-2 gap-3">
-                {renderDateSelect(
-                  'suica-date',
-                  suicaForm.date,
-                  (event) => setSuicaForm((current) => ({ ...current, date: event.target.value })),
-                )}
-                {renderFloatingManualInput({
-                  id: 'chargeJpy',
-                  label: '儲值日幣',
-                  value: suicaForm.chargeJpy,
-                  onChange: (event) =>
-                    setSuicaForm((current) => ({ ...current, chargeJpy: event.target.value })),
-                })}
-              </div>
-            </section>
+            <EntryFormSection>
+              <EntryTwoColumnRow>
+                <FloatingSelect
+                  className="min-w-0"
+                  id="suica-date"
+                  label="日期"
+                  value={suicaForm.date}
+                  onChange={(event) => setSuicaForm((current) => ({ ...current, date: event.target.value }))}
+                >
+                  {TRIP_DATE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </FloatingSelect>
+                <FloatingInput
+                  id="chargeJpy"
+                  label="儲值日幣"
+                  type="number"
+                  value={suicaForm.chargeJpy}
+                  onChange={(event) =>
+                    setSuicaForm((current) => ({ ...current, chargeJpy: event.target.value }))
+                  }
+                />
+              </EntryTwoColumnRow>
+            </EntryFormSection>
 
             <StickySubmitBar>
               <button className={PRIMARY_BLOCK_BUTTON_CLASS_NAME} type="submit" disabled={isSavingSuica}>

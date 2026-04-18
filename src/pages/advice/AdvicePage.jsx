@@ -1,7 +1,6 @@
-import { RotateCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
-import { HeaderIconButton, StatusBanner, TextInput } from '../../shared/ui.jsx';
+import { RefreshButton, StatusBanner, TextInput } from '../../shared/ui.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import { getAppData } from '../../lib/gas/client.js';
 import { calcPaymentStatus } from '../../lib/domain/calcPaymentStatus.js';
@@ -71,16 +70,7 @@ export function AdvicePage() {
       title="建議"
       subtitle=""
       currentPath="/advice.html"
-      actions={(
-        <HeaderIconButton
-          aria-label="重新抓取資料"
-          title="重新抓取資料"
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-        >
-          <RotateCw className={isRefreshing ? 'animate-spin' : ''} size={16} strokeWidth={2.2} />
-        </HeaderIconButton>
-      )}
+      actions={<RefreshButton isRefreshing={isRefreshing} onRefresh={handleRefresh} />}
     >
       {message ? <StatusBanner>{message}</StatusBanner> : null}
       <section className="grid gap-3">

@@ -1,10 +1,12 @@
-import { ExternalLink, RotateCw, Settings2, Wallet, X } from 'lucide-react';
+import { ExternalLink, Settings2, Wallet, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
 import {
   AssetStatusCard,
   HeaderIconButton,
   LoadingCard,
+  RefreshButton,
+  SaveOverlay,
   SettingsToggleRow,
   StatusBanner,
 } from '../../shared/ui.jsx';
@@ -12,7 +14,7 @@ import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import { getAppData, updatePaymentRuleEnabled } from '../../lib/gas/client.js';
 import { calcPaymentStatus } from '../../lib/domain/calcPaymentStatus.js';
 import { formatCurrency, formatPercent, toNumber } from '../../lib/domain/format.js';
-import { normalizeRecordDate } from '../../lib/domain/calcOverview.js';
+import { createRateMap, getBaseYear, normalizeRecordDate } from '../../lib/domain/calcOverview.js';
 
 export function AssetsPage() {
   const [state, setState] = useState({
@@ -144,14 +146,7 @@ export function AssetsPage() {
           >
             <Settings2 size={16} strokeWidth={2.2} />
           </HeaderIconButton>
-          <HeaderIconButton
-            aria-label="重新抓取資料"
-            title="重新抓取資料"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-          >
-            <RotateCw className={isRefreshing ? 'animate-spin' : ''} size={16} strokeWidth={2.2} />
-          </HeaderIconButton>
+          <RefreshButton isRefreshing={isRefreshing} onRefresh={handleRefresh} />
         </>
       )}
     >
@@ -262,15 +257,11 @@ export function AssetsPage() {
                 );
               })}
             </div>
-            {isSavingRule ? (
-              <div className="absolute inset-0 z-[2] grid place-items-center bg-[rgba(255,255,255,0.68)] p-[18px] backdrop-blur-[2px]" role="status" aria-live="polite">
-                <div className="rounded-full border border-[var(--line)] bg-[rgba(255,255,255,0.96)] px-4 py-3 text-[14px] font-bold text-[var(--text)] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
-                  <strong>{pendingPaymentPlan ? `更新 ${pendingPaymentPlan} 中...` : '更新中...'}</strong>
-                </div>
-              </div>
-            ) : null}
           </section>
         </div>
+      ) : null}
+      {isSavingRule ? (
+        <SaveOverlay>{pendingPaymentPlan ? `更新 ${pendingPaymentPlan} 中...` : '更新中...'}</SaveOverlay>
       ) : null}
     </AppShell>
   );
@@ -298,20 +289,3 @@ function getCurrentRuleEnabled(paymentPlan, rules) {
   return rules.find((rule) => rule.paymentPlan === paymentPlan)?.enabled !== false;
 }
 
-function createRateMap(rateHistory) {
-  return rateHistory.reduce((accumulator, item) => {
-    const normalizedDate = normalizeRecordDate(item.date, getBaseYear(item.date));
-    if (normalizedDate && item.rate) {
-      accumulator[normalizedDate] = toNumber(item.rate);
-    }
-    return accumulator;
-  }, {});
-}
-
-function getBaseYear(dateText) {
-  if (dateText && /^\d{4}-\d{2}-\d{2}$/.test(dateText)) {
-    return Number(dateText.slice(0, 4));
-  }
-
-  return new Date().getFullYear();
-}

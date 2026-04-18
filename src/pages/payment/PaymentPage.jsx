@@ -1,11 +1,12 @@
-import { RotateCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
-import { CategoryChip, HeaderIconButton, RecordListLink, StatusBanner } from '../../shared/ui.jsx';
+import { CategoryChip, RecordListLink, RefreshButton, StatusBanner } from '../../shared/ui.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import { getAppData } from '../../lib/gas/client.js';
 import { formatCurrency, toNumber } from '../../lib/domain/format.js';
 import {
+  createRateMap,
+  getBaseYear,
   getEstimatedRecordTwdCost,
   getRecordJpyAmount,
 } from '../../lib/domain/calcOverview.js';
@@ -20,6 +21,7 @@ export function PaymentPage() {
     message: '',
     records: [],
     latestRate: 0,
+    baseYear: new Date().getFullYear(),
     rateMap: {},
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -32,7 +34,9 @@ export function PaymentPage() {
 
     const settings = getAppSettings();
     const result = await getAppData(settings.webAppUrl, settings.token, { forceRefresh });
-    const latestRate = toNumber(result.data?.latestRate?.rate);
+    const latestRateData = result.data?.latestRate;
+    const latestRate = toNumber(latestRateData?.rate);
+    const baseYear = getBaseYear(latestRateData?.date);
     const rateMap = createRateMap(result.data?.rateHistory ?? []);
     const records = (result.data?.shoppingRecords ?? [])
       .filter((record) => record.payment === paymentPlan)
@@ -43,6 +47,7 @@ export function PaymentPage() {
       message: result.message || '',
       records,
       latestRate,
+      baseYear,
       rateMap,
     });
   }
@@ -61,7 +66,7 @@ export function PaymentPage() {
     }
   }
 
-  const groupedRecords = groupRecordsByDate(state.records, state.rateMap, state.latestRate);
+  const groupedRecords = groupRecordsByDate(state.records, state.rateMap, state.latestRate, state.baseYear);
 
   return (
     <AppShell
@@ -70,14 +75,7 @@ export function PaymentPage() {
       currentPath=""
       hideNavigation
       actions={(
-        <HeaderIconButton
-          aria-label="重新抓取資料"
-          title="重新抓取資料"
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-        >
-          <RotateCw className={isRefreshing ? 'animate-spin' : ''} size={16} strokeWidth={2.2} />
-        </HeaderIconButton>
+        <RefreshButton isRefreshing={isRefreshing} onRefresh={handleRefresh} />
       )}
     >
       {state.message ? <StatusBanner>{state.message}</StatusBanner> : null}
@@ -135,16 +133,7 @@ export function PaymentPage() {
   );
 }
 
-function createRateMap(rateHistory) {
-  return rateHistory.reduce((accumulator, item) => {
-    if (item?.date && item?.rate) {
-      accumulator[item.date] = toNumber(item.rate);
-    }
-    return accumulator;
-  }, {});
-}
-
-function groupRecordsByDate(records, rateMap, fallbackRate) {
+function groupRecordsByDate(records, rateMap, fallbackRate, baseYear) {
   const grouped = records.reduce((accumulator, record) => {
     const date = record.date || '未知日期';
     const current = accumulator[date] ?? {
@@ -155,7 +144,7 @@ function groupRecordsByDate(records, rateMap, fallbackRate) {
 
     current.records.push(record);
     current.expenseTwd += Math.abs(
-      getEstimatedRecordTwdCost(record, rateMap, fallbackRate),
+      getEstimatedRecordTwdCost(record, rateMap, fallbackRate, baseYear),
     );
     accumulator[date] = current;
     return accumulator;

@@ -63,8 +63,8 @@ export function getEstimatedRecordTwdCost(record, rateMap = {}, fallbackRate = 0
 
 export function getRecordJpyAmount(record) {
   return firstNonZero([
-    record.jpyAmount,
     record.total,
+    record.jpyAmount,
     record.jpyNet,
   ]);
 }
@@ -111,6 +111,25 @@ export function normalizeRecordDate(value, baseYear = new Date().getFullYear()) 
   }
 
   return `${baseYear}-${match[1]}-${match[2]}`;
+}
+
+export function getBaseYear(dateText) {
+  if (dateText && /^\d{4}-\d{2}-\d{2}$/.test(dateText)) {
+    return Number(dateText.slice(0, 4));
+  }
+
+  return new Date().getFullYear();
+}
+
+export function createRateMap(rateHistory) {
+  return rateHistory.reduce((accumulator, item) => {
+    const normalizedDate = normalizeRecordDate(item.date, getBaseYear(item.date));
+    if (normalizedDate && item.rate) {
+      accumulator[normalizedDate] = toNumber(item.rate);
+    }
+
+    return accumulator;
+  }, {});
 }
 
 function firstNonZero(values) {

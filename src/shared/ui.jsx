@@ -1,3 +1,5 @@
+import { RotateCw } from 'lucide-react';
+
 function joinClassNames(...values) {
   return values.filter(Boolean).join(' ');
 }
@@ -226,6 +228,33 @@ export function SettingsToggleRow({
         <span className={checked ? 'absolute top-[3px] left-[3px] h-[22px] w-[22px] translate-x-5 rounded-full bg-white shadow-[0_2px_6px_rgba(15,23,42,0.16)] transition-transform' : 'absolute top-[3px] left-[3px] h-[22px] w-[22px] rounded-full bg-white shadow-[0_2px_6px_rgba(15,23,42,0.16)] transition-transform'} />
       </button>
     </label>
+  );
+}
+
+export function SaveOverlay({ children }) {
+  return (
+    <div
+      className="fixed inset-0 z-[80] grid place-items-center bg-[rgba(255,255,255,0.68)] backdrop-blur-[2px]"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="rounded-full border border-[var(--line)] bg-[rgba(255,255,255,0.96)] px-4 py-3 text-[14px] font-bold text-[var(--text)] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
+        <strong>{children}</strong>
+      </div>
+    </div>
+  );
+}
+
+export function RefreshButton({ isRefreshing, onRefresh }) {
+  return (
+    <HeaderIconButton
+      aria-label="重新抓取資料"
+      title="重新抓取資料"
+      onClick={onRefresh}
+      disabled={isRefreshing}
+    >
+      <RotateCw className={isRefreshing ? 'animate-spin' : ''} size={16} strokeWidth={2.2} />
+    </HeaderIconButton>
   );
 }
 
