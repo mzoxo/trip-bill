@@ -1,7 +1,7 @@
 import { RotateCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
-import { BackLink, CategoryChip, HeaderIconButton, RecordListLink, StatusBanner } from '../../shared/ui.jsx';
+import { CategoryChip, HeaderIconButton, RecordListLink, StatusBanner } from '../../shared/ui.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import { getAppData } from '../../lib/gas/client.js';
 import { formatCurrency, toNumber } from '../../lib/domain/format.js';
@@ -65,6 +65,7 @@ export function PaymentPage() {
 
   return (
     <AppShell
+      backHref="/assets.html"
       title={paymentPlan || '支付明細'}
       currentPath=""
       hideNavigation
@@ -79,7 +80,6 @@ export function PaymentPage() {
         </HeaderIconButton>
       )}
     >
-      <BackLink href="/assets.html">返回資產</BackLink>
       {state.message ? <StatusBanner>{state.message}</StatusBanner> : null}
       {state.loading ? (
         <StatusBanner tone="neutral">正在整理資料...</StatusBanner>

@@ -24,6 +24,50 @@ export function TextInput({ className = '', ...props }) {
   return <input className={joinClassNames(TEXT_INPUT_CLASS_NAME, className)} {...props} />;
 }
 
+export function FloatingSelect({
+  id,
+  label,
+  value,
+  onChange,
+  className = '',
+  selectClassName = '',
+  labelClassName = '',
+  iconClassName = '',
+  children,
+  ...props
+}) {
+  return (
+    <div className={joinClassNames('grid gap-0', className)}>
+      <div className="relative">
+        <select
+          className={joinClassNames(
+            'min-h-11 w-full appearance-none rounded-[10px] border border-[#e5e7eb] bg-white px-[14px] py-[10px] text-[var(--text)] outline-none transition focus:border-[var(--accent)]',
+            selectClassName,
+          )}
+          id={id}
+          value={value}
+          onChange={onChange}
+          {...props}
+        >
+          {children}
+        </select>
+        <label
+          className={joinClassNames(
+            'pointer-events-none absolute left-[14px] top-[-8px] rounded-full bg-white px-1 text-[12px] font-semibold text-[var(--accent)]',
+            labelClassName,
+          )}
+          htmlFor={id}
+        >
+          {label}
+        </label>
+        <span className={joinClassNames('pointer-events-none absolute right-[14px] top-1/2 -translate-y-1/2 text-[12px] text-[var(--muted)]', iconClassName)}>
+          ▾
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function HeaderIconButton({ className = '', children, ...props }) {
   return (
     <button className={joinClassNames(HEADER_ICON_BUTTON_CLASS_NAME, className)} type="button" {...props}>
@@ -112,7 +156,7 @@ export function SegmentedControl({ options, value, onChange, ariaLabel, classNam
 
 export function StickySubmitBar({ className = '', children }) {
   return (
-    <div className={joinClassNames('sticky bottom-[74px] bg-[linear-gradient(180deg,rgba(245,247,250,0)_0%,#f5f7fa_26%)] pt-[6px]', className)}>
+    <div className={joinClassNames('sticky bottom-[24px] bg-[linear-gradient(180deg,rgba(245,247,250,0)_0%,#f5f7fa_26%)] pt-[6px]', className)}>
       {children}
     </div>
   );

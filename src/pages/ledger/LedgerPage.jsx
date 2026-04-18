@@ -2,6 +2,7 @@ import { RotateCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
 import {
+  FloatingSelect,
   HeaderIconButton,
   PRIMARY_BLOCK_BUTTON_CLASS_NAME,
   SegmentedControl,
@@ -137,13 +138,19 @@ function getDefaultPayment(paymentRules) {
 
 function renderDateSelect(id, value, onChange) {
   return (
-    <select id={id} value={value} onChange={onChange}>
+    <FloatingSelect
+      className="min-w-0"
+      id={id}
+      label="日期"
+      value={value}
+      onChange={onChange}
+    >
       {TRIP_DATE_OPTIONS.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}
         </option>
       ))}
-    </select>
+    </FloatingSelect>
   );
 }
 
@@ -376,9 +383,11 @@ export function LedgerPage() {
 
   return (
     <AppShell
+      backHref="/index.html"
       title="記帳"
       subtitle=""
       currentPath="/ledger.html"
+      hideNavigation
       actions={(
         <HeaderIconButton
           aria-label="重新抓取資料"
@@ -392,7 +401,7 @@ export function LedgerPage() {
     >
       {message ? <StatusBanner>{message}</StatusBanner> : null}
 
-      <section className="grid grid-cols-2 gap-[6px] rounded-[12px] bg-[#f3f4f6] p-1" role="tablist" aria-label="記帳模式">
+      <section className="grid grid-cols-2 gap-[6px] rounded-[12px] border border-[var(--line)] bg-white p-1" role="tablist" aria-label="記帳模式">
         <button
           type="button"
           className={entryTab === 'shopping' ? 'min-h-10 rounded-[8px] bg-[#edf4ff] px-4 font-bold text-[var(--accent)]' : 'min-h-10 rounded-[8px] bg-transparent px-4 font-bold text-[var(--muted)]'}
@@ -413,25 +422,21 @@ export function LedgerPage() {
         <section className="grid gap-[14px]">
           <form className="grid gap-[14px]" onSubmit={handleShoppingSubmit}>
             <section className="grid gap-3">
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className={FIELD_CLASS_NAME}>
-                  <label className="font-bold text-[var(--text)]" htmlFor="shopping-date">日期</label>
-                  {renderDateSelect(
-                    'shopping-date',
-                    shoppingForm.date,
-                    (event) => setShoppingForm((current) => ({ ...current, date: event.target.value })),
-                  )}
-                </div>
-                <div className={FIELD_CLASS_NAME}>
-                  <label className="font-bold text-[var(--text)]" htmlFor="payment">支付</label>
-                  <select
-                    className={INPUT_CLASS_NAME}
-                    id="payment"
-                    value={shoppingForm.payment}
-                    onChange={(event) =>
-                      setShoppingForm((current) => ({ ...current, payment: event.target.value }))
-                    }
-                  >
+              <div className="grid grid-cols-2 gap-3">
+                {renderDateSelect(
+                  'shopping-date',
+                  shoppingForm.date,
+                  (event) => setShoppingForm((current) => ({ ...current, date: event.target.value })),
+                )}
+                <FloatingSelect
+                  className="min-w-0"
+                  id="payment"
+                  label="支付"
+                  value={shoppingForm.payment}
+                  onChange={(event) =>
+                    setShoppingForm((current) => ({ ...current, payment: event.target.value }))
+                  }
+                >
                     {paymentRules.length === 0 ? (
                       <option value="Suica">Suica</option>
                     ) : (
@@ -441,8 +446,7 @@ export function LedgerPage() {
                         </option>
                       ))
                     )}
-                  </select>
-                </div>
+                </FloatingSelect>
               </div>
             </section>
 
@@ -492,7 +496,7 @@ export function LedgerPage() {
             </section>
 
             <section className="grid gap-3">
-              <div className="grid items-start gap-3 md:grid-cols-[minmax(0,1fr)_108px_minmax(0,1fr)]">
+              <div className="grid items-start gap-3 grid-cols-[minmax(0,1fr)_108px_minmax(0,1fr)]">
                 {renderFloatingManualInput({
                   id: 'jpyNet',
                   label: '日幣未稅',
@@ -540,7 +544,7 @@ export function LedgerPage() {
                   },
                 })}
               </div>
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid grid-cols-2 gap-3">
                 {renderFloatingManualInput({
                   id: 'quantity',
                   label: '數量',
@@ -586,27 +590,19 @@ export function LedgerPage() {
         <section className="grid gap-[14px]">
           <form className="grid gap-[14px]" onSubmit={handleSuicaSubmit}>
             <section className="grid gap-3">
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className={FIELD_CLASS_NAME}>
-                  <label className="font-bold text-[var(--text)]" htmlFor="suica-date">日期</label>
-                  {renderDateSelect(
-                    'suica-date',
-                    suicaForm.date,
-                    (event) => setSuicaForm((current) => ({ ...current, date: event.target.value })),
-                  )}
-                </div>
-                <div className={FIELD_CLASS_NAME}>
-                  <label className="font-bold text-[var(--text)]" htmlFor="chargeJpy">儲值日幣</label>
-                  <input
-                    className={INPUT_CLASS_NAME}
-                    id="chargeJpy"
-                    type="number"
-                    value={suicaForm.chargeJpy}
-                    onChange={(event) =>
-                      setSuicaForm((current) => ({ ...current, chargeJpy: event.target.value }))
-                    }
-                  />
-                </div>
+              <div className="grid grid-cols-2 gap-3">
+                {renderDateSelect(
+                  'suica-date',
+                  suicaForm.date,
+                  (event) => setSuicaForm((current) => ({ ...current, date: event.target.value })),
+                )}
+                {renderFloatingManualInput({
+                  id: 'chargeJpy',
+                  label: '儲值日幣',
+                  value: suicaForm.chargeJpy,
+                  onChange: (event) =>
+                    setSuicaForm((current) => ({ ...current, chargeJpy: event.target.value })),
+                })}
               </div>
             </section>
 

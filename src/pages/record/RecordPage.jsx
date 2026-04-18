@@ -2,8 +2,8 @@ import { RotateCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
 import {
-  BackLink,
   DANGER_BLOCK_BUTTON_CLASS_NAME,
+  FloatingSelect,
   HeaderIconButton,
   PRIMARY_BLOCK_BUTTON_CLASS_NAME,
   SegmentedControl,
@@ -185,6 +185,7 @@ export function RecordPage() {
 
   return (
     <AppShell
+      backHref="/index.html"
       title="編輯交易"
       currentPath=""
       hideNavigation
@@ -199,40 +200,33 @@ export function RecordPage() {
         </HeaderIconButton>
       )}
     >
-      <BackLink href="/index.html">返回總覽</BackLink>
       {message ? <StatusBanner>{message}</StatusBanner> : null}
       {isLoading ? (
         <StatusBanner tone="neutral">正在整理資料...</StatusBanner>
       ) : (
         <form className="grid gap-[14px]" onSubmit={handleSubmit}>
           <section className="grid gap-3">
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className={FIELD_CLASS_NAME}>
-                <label className="font-bold text-[var(--text)]" htmlFor="record-date">日期</label>
-                <select
-                  className={INPUT_CLASS_NAME}
-                  id="record-date"
-                  value={form.date}
-                  onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))}
-                >
+            <div className="grid grid-cols-2 gap-3">
+              <FloatingSelect
+                id="record-date"
+                label="日期"
+                value={form.date}
+                onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))}
+              >
                   {TRIP_DATE_OPTIONS.map((option) => (
                     <option key={option} value={option}>{option}</option>
                   ))}
-                </select>
-              </div>
-              <div className={FIELD_CLASS_NAME}>
-                <label className="font-bold text-[var(--text)]" htmlFor="record-payment">支付</label>
-                <select
-                  className={INPUT_CLASS_NAME}
-                  id="record-payment"
-                  value={form.payment}
-                  onChange={(event) => setForm((current) => ({ ...current, payment: event.target.value }))}
-                >
+              </FloatingSelect>
+              <FloatingSelect
+                id="record-payment"
+                label="支付"
+                value={form.payment}
+                onChange={(event) => setForm((current) => ({ ...current, payment: event.target.value }))}
+              >
                   {paymentRules.map((rule) => (
                     <option key={rule.paymentPlan} value={rule.paymentPlan}>{rule.paymentPlan}</option>
                   ))}
-                </select>
-              </div>
+              </FloatingSelect>
             </div>
           </section>
 
@@ -250,7 +244,7 @@ export function RecordPage() {
               {renderFloatingInput('quantity', '數量', form, setForm, 'number')}
               {renderFloatingInput('total', '日幣總計', form, setForm, 'number')}
             </div>
-            <div className="grid items-start gap-3 md:grid-cols-[minmax(0,1fr)_108px_minmax(0,1fr)]">
+            <div className="grid items-start gap-3 grid-cols-[minmax(0,1fr)_108px_minmax(0,1fr)]">
               {renderFloatingInput('jpyNet', '日幣未稅', form, setForm, 'number')}
               <div className={`${FIELD_CLASS_NAME} min-w-[108px]`}>
                 <SegmentedControl

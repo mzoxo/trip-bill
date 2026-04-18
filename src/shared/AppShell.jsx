@@ -1,4 +1,4 @@
-import { ChartPie, House, Wallet } from 'lucide-react';
+import { ChevronLeft, ChartPie, House, Wallet } from 'lucide-react';
 import '../styles/index.css';
 
 const NAV_ITEMS = [
@@ -7,13 +7,24 @@ const NAV_ITEMS = [
   { href: '/advice.html', label: '建議', icon: ChartPie },
 ];
 
-export function AppShell({ title, subtitle, currentPath, children, actions, hideNavigation = false }) {
+export function AppShell({ title, subtitle, currentPath, children, actions, hideNavigation = false, backHref = '' }) {
   return (
     <div className="app-shell min-h-screen bg-white text-[var(--text)]">
       <main className="content">
         <section className="app-frame">
           <header className="page-header page-header-fixed bg-white/90">
-            <div className="page-header-side" aria-hidden="true" />
+            <div className="page-header-side">
+              {backHref ? (
+                <a
+                  className="inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-[var(--line)] bg-white px-2 text-[var(--accent)]"
+                  href={backHref}
+                  aria-label="返回"
+                  title="返回"
+                >
+                  <ChevronLeft size={16} strokeWidth={2.4} />
+                </a>
+              ) : null}
+            </div>
             <div className="page-header-center">
               {title ? <h2 className="m-0 text-base leading-none font-semibold">{title}</h2> : null}
               {subtitle ? <p className="subtitle text-[var(--muted)]">{subtitle}</p> : null}
