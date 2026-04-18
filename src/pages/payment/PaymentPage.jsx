@@ -1,7 +1,7 @@
 import { RotateCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
-import { StatusBanner } from '../../shared/ui.jsx';
+import { BackLink, CategoryChip, HeaderIconButton, RecordListLink, StatusBanner } from '../../shared/ui.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import { getAppData } from '../../lib/gas/client.js';
 import { formatCurrency, toNumber } from '../../lib/domain/format.js';
@@ -69,75 +69,61 @@ export function PaymentPage() {
       currentPath=""
       hideNavigation
       actions={(
-        <button
-          type="button"
-          className={isRefreshing ? 'icon-button is-spinning' : 'icon-button'}
+        <HeaderIconButton
           aria-label="重新抓取資料"
           title="重新抓取資料"
           onClick={handleRefresh}
           disabled={isRefreshing}
         >
-          <RotateCw size={16} strokeWidth={2.2} />
-        </button>
+          <RotateCw className={isRefreshing ? 'animate-spin' : ''} size={16} strokeWidth={2.2} />
+        </HeaderIconButton>
       )}
     >
-      <section className="detail-topbar">
-        <a className="text-link" href="/assets.html">返回資產</a>
-      </section>
+      <BackLink href="/assets.html">返回資產</BackLink>
       {state.message ? <StatusBanner>{state.message}</StatusBanner> : null}
       {state.loading ? (
         <StatusBanner tone="neutral">正在整理資料...</StatusBanner>
       ) : groupedRecords.length === 0 ? (
         <StatusBanner tone="neutral">目前沒有這個支付方式的消費紀錄</StatusBanner>
       ) : (
-        <section className="overview-section">
-          <div className="record-group-list">
+        <section className="grid gap-3">
+          <div className="grid gap-[14px]">
             {groupedRecords.map((group) => (
-              <section className="record-group" key={group.date}>
-                <header className="record-group-header">
+              <section className="grid gap-[10px]" key={group.date}>
+                <header className="flex items-center justify-between gap-3 text-[14px]">
                   <strong>{group.date}</strong>
-                  <span className="record-group-summary">
-                    <span className="record-group-expense">
+                  <span className="whitespace-nowrap text-[var(--line)]">
+                    <span className="text-[#ef4444]">
                       -{formatCurrency(group.expenseTwd, 'TWD')}
                     </span>
                   </span>
                 </header>
-                <div className="record-list">
+                <div className="grid gap-[10px]">
                   {group.records.map((record) => (
-                    <a
-                      className="record-item record-item-link"
-                      href={`/record.html?row=${record.rowNumber}`}
+                    <RecordListLink
                       key={record.rowNumber}
-                    >
-                      <div className="record-main">
-                        <div>
-                          <strong>{record.name || record.store}</strong>
-                          <div className="record-meta">
-                            {record.category ? (
-                              <span className="record-category-badge">{record.category}</span>
-                            ) : null}
-                            {record.store ? (
-                              <span className="record-meta-text">{record.store}</span>
-                            ) : null}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="record-amounts">
-                        <strong className="record-amount">
-                          {formatCurrency(
-                            getEstimatedRecordTwdCost(
-                              record,
-                              state.rateMap,
-                              state.latestRate,
-                            ),
-                            'TWD',
-                          )}
-                        </strong>
-                        <span className="record-amount-sub">
-                          {formatCurrency(getRecordJpyAmount(record), 'JPY')}
-                        </span>
-                      </div>
-                    </a>
+                      href={`/record.html?row=${record.rowNumber}`}
+                      title={record.name || record.store}
+                      meta={(
+                        <>
+                          {record.category ? (
+                            <CategoryChip>{record.category}</CategoryChip>
+                          ) : null}
+                          {record.store ? (
+                            <span className="text-[var(--muted)]">{record.store}</span>
+                          ) : null}
+                        </>
+                      )}
+                      primary={formatCurrency(
+                        getEstimatedRecordTwdCost(
+                          record,
+                          state.rateMap,
+                          state.latestRate,
+                        ),
+                        'TWD',
+                      )}
+                      secondary={formatCurrency(getRecordJpyAmount(record), 'JPY')}
+                    />
                   ))}
                 </div>
               </section>

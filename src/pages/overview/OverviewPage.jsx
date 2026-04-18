@@ -19,7 +19,7 @@ import tshirtIcon from '../../assets/openmoji/t-shirt.svg';
 import ticketsIcon from '../../assets/openmoji/tickets.svg';
 import trainIcon from '../../assets/openmoji/train.svg';
 import { AppShell } from '../../shared/AppShell.jsx';
-import { StatusBanner } from '../../shared/ui.jsx';
+import { CategoryChip, HeaderIconButton, PanelCard, RecordListLink, StatusBanner } from '../../shared/ui.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import { getAppData } from '../../lib/gas/client.js';
 import {
@@ -124,26 +124,24 @@ export function OverviewPage() {
   return (
     <AppShell
       title={(
-        <span className="page-title-inline">
+        <span className="inline-flex items-baseline gap-2">
           <span>總覽</span>
           {state.rateInfo ? (
-            <span className="page-title-meta">匯率 {state.rateInfo.rate.toFixed(4)}</span>
+            <span className="text-[12px] font-medium text-[var(--muted)]">匯率 {state.rateInfo.rate.toFixed(4)}</span>
           ) : null}
         </span>
       )}
       subtitle=""
       currentPath="/index.html"
       actions={(
-        <button
-          type="button"
-          className={isRefreshing ? 'icon-button is-spinning' : 'icon-button'}
+        <HeaderIconButton
           aria-label="重新抓取資料"
           title="重新抓取資料"
           onClick={handleRefresh}
           disabled={isRefreshing}
         >
-          <RotateCw size={16} strokeWidth={2.2} />
-        </button>
+          <RotateCw className={isRefreshing ? 'animate-spin' : ''} size={16} strokeWidth={2.2} />
+        </HeaderIconButton>
       )}
     >
       {state.message ? <StatusBanner>{state.message}</StatusBanner> : null}
@@ -151,96 +149,78 @@ export function OverviewPage() {
         <StatusBanner tone="neutral">正在整理資料...</StatusBanner>
       ) : (
         <>
-          <section className="budget-panel">
-            <div className="budget-head">
+          <PanelCard className="px-4 py-3">
+            <div className="flex items-center gap-[14px]">
               <div
                 className={ringClassName}
                 style={{ '--budget-progress': `${ringProgress}%` }}
               >
                 <span>{progress}%</span>
               </div>
-              <div className="budget-body">
-                <div className="budget-copy">
-                  <p className="budget-label">
-                    預算 <span>{formatCurrency(budget, 'TWD')}</span>
+              <div className="grid min-w-0 flex-1 grid-cols-2">
+                <div className="grid gap-[6px]">
+                  <p className="m-0 text-[14px]">
+                    預算 <span className="text-[var(--muted)]">{formatCurrency(budget, 'TWD')}</span>
                   </p>
-                  <p className={isOverBudget ? 'budget-over is-over' : 'budget-over'}>
+                  <p className="m-0 text-[14px]">
                     {isOverBudget ? '超支' : '剩餘'}{' '}
-                    <span>{formatCurrency(isOverBudget ? overspend : remaining, 'TWD')}</span>
+                    <span className={isOverBudget ? 'inline-block rounded-full bg-[#ffefef] px-[10px] text-[#ef4444] font-bold' : 'inline-block rounded-full bg-[#f3f4f6] px-[10px] text-[#4b5563] font-bold'}>
+                      {formatCurrency(isOverBudget ? overspend : remaining, 'TWD')}
+                    </span>
                   </p>
                 </div>
-                <div className="budget-copy">
-                  <p className="budget-label">
-                    支出 <span>{formatCurrency(overview.totalCost, 'TWD')}</span>
+                <div className="grid gap-[6px]">
+                  <p className="m-0 text-[14px]">
+                    支出 <span className="text-[var(--muted)]">{formatCurrency(overview.totalCost, 'TWD')}</span>
                   </p>
-                  <p className="budget-label">
-                    收入 <span>{formatCurrency(0, 'TWD')}</span>
+                  <p className="m-0 text-[14px]">
+                    收入 <span className="text-[var(--muted)]">{formatCurrency(0, 'TWD')}</span>
                   </p>
                 </div>
               </div>
             </div>
-          </section>
-
-          {/* <section className="summary-duo">
-            <article className="summary-card summary-card-expense">
-              <p>支出</p>
-              <strong>{formatCurrency(overview.totalCost, 'TWD')}</strong>
-            </article>
-            <article className="summary-card summary-card-income">
-              <p>收入</p>
-              <strong>{formatCurrency(0, 'TWD')}</strong>
-            </article>
-          </section> */}
-
-          <section className="overview-section">
-            <div className="record-group-list">
+          </PanelCard>
+          <section className="grid gap-3">
+            <div className="grid gap-[14px]">
               {state.groupedRecords.map((group) => (
-                <section className="record-group" key={group.date}>
-                  <header className="record-group-header">
+                <section className="grid gap-[10px]" key={group.date}>
+                  <header className="flex items-center justify-between gap-3 text-[14px]">
                     <strong>{group.label}</strong>
-                    <span className="record-group-summary">
-                      <span className="record-group-expense">
+                    <span className="whitespace-nowrap text-[var(--line)]">
+                      <span className="text-[#ef4444]">
                         -{formatCurrency(group.expenseTwd, 'TWD')}
                       </span>{' '}
                       /{' '}
-                      <span className="record-group-income">
+                      <span className="text-[#16a34a]">
                         {formatCurrency(group.incomeTwd, 'TWD')}
                       </span>
                     </span>
                   </header>
-                  <div className="record-list">
+                  <div className="grid gap-[10px]">
                     {group.records.map((record, index) => (
-                      <a
-                        className="record-item record-item-link"
+                      <RecordListLink
                         href={`/record.html?row=${record.rowNumber}`}
                         key={record.rowNumber ?? `${group.date}-${record.store}-${index}`}
-                      >
-                        <div className="record-main">
-                          <div className="record-icon">{getCategoryIcon(record.category)}</div>
-                          <div>
-                            <strong>
-                              {record.name || record.store}
-                              {renderQuantity(record.quantity)}
-                            </strong>
-                            <div className="record-meta">
-                              {record.category ? (
-                                <span className="record-category-badge">{record.category}</span>
-                              ) : null}
-                              {record.store ? (
-                                <span className="record-meta-text">{record.store}</span>
-                              ) : null}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="record-amounts">
-                          <strong className="record-amount">
-                            {formatPrimaryAmount(record, state.rateMap, state.rateInfo?.rate)}
-                          </strong>
-                          <span className="record-amount-sub">
-                            {formatSecondaryAmount(record)}
-                          </span>
-                        </div>
-                      </a>
+                        leading={<div className="grid h-8 w-8 place-items-center rounded-[10px] bg-[#f7f7f7] text-[18px]">{getCategoryIcon(record.category)}</div>}
+                        title={(
+                          <>
+                            {record.name || record.store}
+                            {renderQuantity(record.quantity)}
+                          </>
+                        )}
+                        meta={(
+                          <>
+                            {record.category ? (
+                              <CategoryChip>{record.category}</CategoryChip>
+                            ) : null}
+                            {record.store ? (
+                              <span className="text-[var(--muted)]">{record.store}</span>
+                            ) : null}
+                          </>
+                        )}
+                        primary={formatPrimaryAmount(record, state.rateMap, state.rateInfo?.rate)}
+                        secondary={formatSecondaryAmount(record)}
+                      />
                     ))}
                   </div>
                 </section>
@@ -248,7 +228,7 @@ export function OverviewPage() {
             </div>
           </section>
 
-          <a className="floating-ledger-button" href="/ledger.html">
+          <a className="fixed bottom-[72px] left-1/2 inline-flex min-h-[52px] min-w-[140px] -translate-x-1/2 items-center justify-center rounded-full border border-[var(--line)] bg-white px-4 font-extrabold text-[#111111]" href="/ledger.html">
             記帳
           </a>
         </>
@@ -309,12 +289,12 @@ function renderQuantity(quantity) {
     return null;
   }
 
-  return <span className="record-quantity"> X{amount}</span>;
+  return <span className="text-[13px] font-semibold text-[var(--muted)]"> X{amount}</span>;
 }
 
 function getCategoryIcon(category) {
   const icon = CATEGORY_ICON_MAP[category] ?? shoppingBagsIcon;
-  return <img className="record-icon-image" src={icon} alt="" aria-hidden="true" />;
+  return <img className="h-5 w-5" src={icon} alt="" aria-hidden="true" />;
 }
 
 function formatPrimaryAmount(record, rateMap, fallbackRate) {
@@ -350,13 +330,14 @@ function getBaseYear(dateText) {
 }
 
 function getBudgetRingClassName(totalCost, overspend) {
+  const baseClassName = 'relative grid h-[50px] w-[50px] place-items-center rounded-full bg-[conic-gradient(var(--budget-fill)_0_var(--budget-progress,0%),var(--budget-track)_var(--budget-progress,0%)_100%)] font-bold text-[#4b5563] before:absolute before:inset-1 before:rounded-full before:bg-white before:content-[""]';
   if (overspend > 0) {
-    return 'budget-ring is-over';
+    return `${baseClassName} [--budget-track:#e5e7eb] [--budget-fill:#ef4444]`;
   }
 
   if (totalCost > 0) {
-    return 'budget-ring is-active';
+    return `${baseClassName} [--budget-track:#e5e7eb] [--budget-fill:#22c55e]`;
   }
 
-  return 'budget-ring';
+  return `${baseClassName} [--budget-track:#e5e7eb] [--budget-fill:#d1d5db]`;
 }

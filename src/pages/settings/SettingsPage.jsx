@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
-import { SectionCard, StatusBanner } from '../../shared/ui.jsx';
+import {
+  PanelCard,
+  PRIMARY_BUTTON_CLASS_NAME,
+  SECONDARY_BUTTON_CLASS_NAME,
+  StatusBanner,
+  TextInput,
+} from '../../shared/ui.jsx';
 import { clearAppDataCache, pingConnection } from '../../lib/gas/client.js';
 import { getAppSettings, saveAppSettings } from '../../lib/storage/settings.js';
 
@@ -49,12 +55,17 @@ export function SettingsPage() {
       hideNavigation
     >
       <StatusBanner tone={tone}>{message}</StatusBanner>
-      <section className="grid">
-        <SectionCard title="連線設定">
-          <form className="form-grid" onSubmit={handleSave}>
-            <div className="field is-full">
-              <label htmlFor="webAppUrl">Google Apps Script Web App URL</label>
-              <input
+      <section className="grid gap-4">
+        <PanelCard className="p-[18px]">
+          <div className="mb-[18px]">
+            <h3 className="m-0 text-base font-semibold text-[var(--text)]">連線設定</h3>
+          </div>
+          <form className="grid gap-[14px]" onSubmit={handleSave}>
+            <div className="grid gap-2">
+              <label className="font-bold text-[var(--text)]" htmlFor="webAppUrl">
+                Google Apps Script Web App URL
+              </label>
+              <TextInput
                 id="webAppUrl"
                 type="url"
                 placeholder="https://script.google.com/macros/s/..."
@@ -64,9 +75,11 @@ export function SettingsPage() {
                 }
               />
             </div>
-            <div className="field is-full">
-              <label htmlFor="token">Token</label>
-              <input
+            <div className="grid gap-2">
+              <label className="font-bold text-[var(--text)]" htmlFor="token">
+                Token
+              </label>
+              <TextInput
                 id="token"
                 type="password"
                 placeholder="輸入你的 token"
@@ -76,23 +89,25 @@ export function SettingsPage() {
                 }
               />
             </div>
-            <div className="field is-full">
-              <div className="actions-row">
-                <button className="button button-primary" type="submit" disabled={isSaving}>
-                  {isSaving ? '儲存中...' : '儲存設定'}
-                </button>
-                <button
-                  className="button button-secondary"
-                  type="button"
-                  onClick={handleTestConnection}
-                  disabled={isTesting}
-                >
-                  {isTesting ? '測試中...' : '測試連線'}
-                </button>
-              </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                className={PRIMARY_BUTTON_CLASS_NAME}
+                type="submit"
+                disabled={isSaving}
+              >
+                {isSaving ? '儲存中...' : '儲存設定'}
+              </button>
+              <button
+                className={SECONDARY_BUTTON_CLASS_NAME}
+                type="button"
+                onClick={handleTestConnection}
+                disabled={isTesting}
+              >
+                {isTesting ? '測試中...' : '測試連線'}
+              </button>
             </div>
           </form>
-        </SectionCard>
+        </PanelCard>
       </section>
     </AppShell>
   );

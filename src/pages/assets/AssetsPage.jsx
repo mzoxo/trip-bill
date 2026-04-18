@@ -1,7 +1,13 @@
 import { ExternalLink, RotateCw, Settings2, Wallet, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
-import { StatusBanner } from '../../shared/ui.jsx';
+import {
+  AssetStatusCard,
+  HeaderIconButton,
+  LoadingCard,
+  SettingsToggleRow,
+  StatusBanner,
+} from '../../shared/ui.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import { getAppData, updatePaymentRuleEnabled } from '../../lib/gas/client.js';
 import { calcPaymentStatus } from '../../lib/domain/calcPaymentStatus.js';
@@ -131,44 +137,34 @@ export function AssetsPage() {
       currentPath="/assets.html"
       actions={(
         <>
-          <button
-            type="button"
-            className="icon-button"
+          <HeaderIconButton
             aria-label="支付方式設定"
             title="支付方式設定"
             onClick={() => setIsSettingsOpen(true)}
           >
             <Settings2 size={16} strokeWidth={2.2} />
-          </button>
-          <button
-            type="button"
-            className={isRefreshing ? 'icon-button is-spinning' : 'icon-button'}
+          </HeaderIconButton>
+          <HeaderIconButton
             aria-label="重新抓取資料"
             title="重新抓取資料"
             onClick={handleRefresh}
             disabled={isRefreshing}
           >
-            <RotateCw size={16} strokeWidth={2.2} />
-          </button>
+            <RotateCw className={isRefreshing ? 'animate-spin' : ''} size={16} strokeWidth={2.2} />
+          </HeaderIconButton>
         </>
       )}
     >
       {state.message ? <StatusBanner>{state.message}</StatusBanner> : null}
-      <section className="assets-group-list">
-        <div className="assets-account-list">
+      <section className="grid gap-[18px]">
+        <div className="grid gap-3">
           {state.loading ? (
-            <article className="assets-account-card">
-              <div className="assets-account-copy">
-                <strong>資料整理中...</strong>
-              </div>
-            </article>
+            <LoadingCard />
           ) : (
             state.statuses.map((item) => (
-              <article
-                className={isOverLimit(item) ? 'assets-usage-card is-danger' : 'assets-usage-card'}
+              <AssetStatusCard
                 key={item.paymentPlan}
-                role="link"
-                tabIndex={0}
+                paymentPlan={item.paymentPlan}
                 onClick={() => {
                   window.location.href = `/payment.html?payment=${encodeURIComponent(item.paymentPlan)}`;
                 }}
@@ -178,113 +174,97 @@ export function AssetsPage() {
                     window.location.href = `/payment.html?payment=${encodeURIComponent(item.paymentPlan)}`;
                   }
                 }}
-              >
-                <div className="assets-usage-head">
-                  <div className="assets-usage-title">
-                    <div className="assets-account-icon-wrap">
-                      <div
-                        className={getIconRingClassName(item)}
-                        style={{ '--usage-progress': `${Math.max(Math.round((item.cumulativeUsageRate ?? 0) * 100), 6)}%` }}
-                      >
-                        <div className="assets-account-icon is-card">
-                          <Wallet size={18} strokeWidth={2.2} />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="assets-account-copy">
-                      <div className="assets-title-row">
-                        <strong>{item.paymentPlan}</strong>
-                        {item.campaignUrl ? (
-                          <a
-                            className="assets-link assets-link-icon"
-                            href={item.campaignUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            aria-label={`${item.paymentPlan} 額滿公告`}
-                            title="額滿公告"
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            <ExternalLink size={14} strokeWidth={2.2} />
-                          </a>
-                        ) : null}
+                leading={(
+                  <div className="grid justify-items-center">
+                    <div
+                      className={getIconRingClassName(item)}
+                      style={{ '--usage-progress': `${Math.max(Math.round((item.cumulativeUsageRate ?? 0) * 100), 6)}%` }}
+                    >
+                      <div className="relative z-[1] grid h-10 w-10 place-items-center text-[#1285c6]">
+                        <Wallet size={18} strokeWidth={2.2} />
                       </div>
                     </div>
                   </div>
-                  <div className="assets-usage-side">
-                    <strong className={isOverLimit(item) ? 'assets-account-amount is-danger' : 'assets-account-amount'}>
-                      {formatCurrency(item.usedTwd, 'TWD')}
-                    </strong>
-                    {item.paymentPlan === 'Suica' && state.latestRate ? (
-                      <span className="assets-account-limit">
-                        剩餘 {formatCurrency(suicaRemainingTwd, 'TWD')}
-                      </span>
-                    ) : item.cumulativeLimitTwd ? (
-                      <span className="assets-account-limit">
-                        剩餘 {formatCurrency(item.cumulativeRemainingTwd, 'TWD')}
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-
-                <p className={isOverLimit(item) ? 'assets-usage-summary is-danger' : 'assets-usage-summary'}>
-                  {formatPercent(item.rewardRate)} 回饋
-                  {item.singleLimitTwd ? ` / 單筆 ${formatCurrency(item.singleLimitTwd, 'TWD')}` : ''}
-                  {' / '}
-                  {item.recordCount} 筆
-                  {item.suicaRemainingJpy ? ` / 餘額 ${formatCurrency(item.suicaRemainingJpy, 'JPY')}` : ''}
-                </p>
-              </article>
+                )}
+                action={item.campaignUrl ? (
+                  <a
+                    className="inline-flex items-center gap-1 text-[12px] font-bold text-[var(--accent)] leading-none"
+                    href={item.campaignUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`${item.paymentPlan} 額滿公告`}
+                    title="額滿公告"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <ExternalLink size={14} strokeWidth={2.2} />
+                  </a>
+                ) : null}
+                amount={formatCurrency(item.usedTwd, 'TWD')}
+                amountClassName={isOverLimit(item) ? 'text-[#d9485f]' : ''}
+                helper={item.paymentPlan === 'Suica' && state.latestRate ? (
+                  <span className="text-right text-[12px] text-[#b0b0b0]">
+                    剩餘 {formatCurrency(suicaRemainingTwd, 'TWD')}
+                  </span>
+                ) : item.cumulativeLimitTwd ? (
+                  <span className="text-right text-[12px] text-[#b0b0b0]">
+                    剩餘 {formatCurrency(item.cumulativeRemainingTwd, 'TWD')}
+                  </span>
+                ) : null}
+                summary={{
+                  className: isOverLimit(item) ? 'm-0 text-[12px] leading-[1.5] text-[#d9485f]' : 'm-0 text-[12px] leading-[1.5] text-[#a1a1aa]',
+                  content: (
+                    <>
+                      {formatPercent(item.rewardRate)} 回饋
+                      {item.singleLimitTwd ? ` / 單筆 ${formatCurrency(item.singleLimitTwd, 'TWD')}` : ''}
+                      {' / '}
+                      {item.recordCount} 筆
+                      {item.suicaRemainingJpy ? ` / 餘額 ${formatCurrency(item.suicaRemainingJpy, 'JPY')}` : ''}
+                    </>
+                  ),
+                }}
+              />
             ))
           )}
         </div>
       </section>
       {isSettingsOpen ? (
-        <div className="modal-overlay" role="presentation" onClick={() => setIsSettingsOpen(false)}>
+        <div className="fixed inset-0 z-[70] grid items-end bg-[rgba(15,23,42,0.16)] px-4 pb-[100px] pt-5" role="presentation" onClick={() => setIsSettingsOpen(false)}>
           <section
-            className="modal-sheet"
+            className="relative mx-auto grid max-h-[min(72vh,680px)] w-full max-w-[500px] grid-rows-[auto_minmax(0,1fr)] gap-4 overflow-hidden rounded-[20px] bg-white p-[18px] shadow-[0_24px_64px_rgba(15,23,42,0.16)]"
             role="dialog"
             aria-modal="true"
             aria-labelledby="payment-settings-title"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="modal-head">
+            <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 id="payment-settings-title">支付方式設定</h3>
-                <p>關閉後不會出現在建議頁推薦順序。</p>
+                <h3 id="payment-settings-title" className="m-0 text-[17px]">支付方式設定</h3>
+                <p className="mt-1.5 text-[13px] leading-[1.5] text-[var(--muted)]">關閉後不會出現在建議頁推薦順序。</p>
               </div>
-              <button
-                type="button"
-                className="icon-button"
+              <HeaderIconButton
                 aria-label="關閉設定"
                 onClick={() => setIsSettingsOpen(false)}
               >
                 <X size={16} strokeWidth={2.2} />
-              </button>
+              </HeaderIconButton>
             </div>
-            <div className="payment-settings-list">
+            <div className="grid min-h-0 content-start gap-3 overflow-y-auto overscroll-contain">
               {state.paymentRules.map((rule) => {
                 const isEnabled = getCurrentRuleEnabled(rule.paymentPlan, state.paymentRules);
                 return (
-                  <label className="payment-setting-row" key={rule.paymentPlan}>
-                    <div className="payment-setting-copy">
-                      <strong>{rule.paymentPlan}</strong>
-                    </div>
-                    <button
-                      type="button"
-                      className={isEnabled ? 'toggle-switch is-on' : 'toggle-switch'}
-                      aria-pressed={isEnabled}
-                      disabled={isSavingRule}
-                      onClick={() => handleTogglePaymentEnabled(rule.paymentPlan)}
-                    >
-                      <span className="toggle-switch-knob" />
-                    </button>
-                  </label>
+                  <SettingsToggleRow
+                    key={rule.paymentPlan}
+                    title={rule.paymentPlan}
+                    checked={isEnabled}
+                    disabled={isSavingRule}
+                    onToggle={() => handleTogglePaymentEnabled(rule.paymentPlan)}
+                  />
                 );
               })}
             </div>
             {isSavingRule ? (
-              <div className="modal-loading-cover" role="status" aria-live="polite">
-                <div className="modal-loading-card">
+              <div className="absolute inset-0 z-[2] grid place-items-center bg-[rgba(255,255,255,0.68)] p-[18px] backdrop-blur-[2px]" role="status" aria-live="polite">
+                <div className="rounded-full border border-[var(--line)] bg-[rgba(255,255,255,0.96)] px-4 py-3 text-[14px] font-bold text-[var(--text)] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
                   <strong>{pendingPaymentPlan ? `更新 ${pendingPaymentPlan} 中...` : '更新中...'}</strong>
                 </div>
               </div>
@@ -300,28 +280,18 @@ function isOverLimit(item) {
   return item.hasReachedSingleLimit || item.hasReachedCumulativeLimit;
 }
 
-function getProgressBarClassName(item) {
-  if (item.hasReachedCumulativeLimit || item.hasReachedSingleLimit) {
-    return 'assets-progress-bar is-danger';
-  }
-
-  if (item.cumulativeUsageRate !== null && item.cumulativeUsageRate >= 0.9) {
-    return 'assets-progress-bar is-warn';
-  }
-
-  return 'assets-progress-bar';
-}
-
 function getIconRingClassName(item) {
+  const baseClassName = 'relative grid h-10 w-10 place-items-center rounded-full bg-[conic-gradient(var(--ring-fill)_0_var(--usage-progress,0%),var(--ring-track)_var(--usage-progress,0%)_100%)] before:absolute before:inset-[3px] before:rounded-full before:bg-white before:content-[""]';
+
   if (item.hasReachedCumulativeLimit || item.hasReachedSingleLimit) {
-    return 'assets-icon-ring is-danger';
+    return `${baseClassName} [--ring-track:#eef3fb] [--ring-fill:#e79991]`;
   }
 
   if (item.cumulativeUsageRate !== null && item.cumulativeUsageRate >= 0.9) {
-    return 'assets-icon-ring is-warn';
+    return `${baseClassName} [--ring-track:#eef3fb] [--ring-fill:#e8c27d]`;
   }
 
-  return 'assets-icon-ring';
+  return `${baseClassName} [--ring-track:#eef3fb] [--ring-fill:#c7d8f7]`;
 }
 
 function getCurrentRuleEnabled(paymentPlan, rules) {

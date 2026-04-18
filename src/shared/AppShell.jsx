@@ -1,5 +1,5 @@
 import { ChartPie, House, Wallet } from 'lucide-react';
-import '../styles/app.css';
+import '../styles/index.css';
 
 const NAV_ITEMS = [
   { href: '/index.html', label: '總覽', icon: House },
@@ -9,17 +9,20 @@ const NAV_ITEMS = [
 
 export function AppShell({ title, subtitle, currentPath, children, actions, hideNavigation = false }) {
   return (
-    <div className="app-shell">
+    <div className="app-shell min-h-screen bg-white text-[var(--text)]">
       <main className="content">
         <section className="app-frame">
-          <header className="page-header page-header-fixed">
-            <div>
-              {title ? <h2>{title}</h2> : null}
-              {subtitle ? <p className="subtitle">{subtitle}</p> : null}
+          <header className="page-header page-header-fixed bg-white/90">
+            <div className="page-header-side" aria-hidden="true" />
+            <div className="page-header-center">
+              {title ? <h2 className="m-0 text-base leading-none font-semibold">{title}</h2> : null}
+              {subtitle ? <p className="subtitle text-[var(--muted)]">{subtitle}</p> : null}
             </div>
-            {actions ? <div className="actions-row">{actions}</div> : null}
+            <div className="page-header-actions">
+              {actions ? <div className="actions-row flex flex-wrap gap-3">{actions}</div> : null}
+            </div>
           </header>
-          <div className="page-content">{children}</div>
+          <div className="page-content grid gap-4 pt-4">{children}</div>
           {hideNavigation ? null : (
             <nav className="bottom-nav">
               {NAV_ITEMS.map((item) => (

@@ -1,7 +1,14 @@
 import { RotateCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
-import { StatusBanner } from '../../shared/ui.jsx';
+import {
+  HeaderIconButton,
+  PRIMARY_BLOCK_BUTTON_CLASS_NAME,
+  SegmentedControl,
+  StickySubmitBar,
+  StatusBanner,
+  TEXT_INPUT_CLASS_NAME,
+} from '../../shared/ui.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import {
   createShoppingRecord,
@@ -61,6 +68,13 @@ const CATEGORY_OPTIONS = [
   { label: '代買', icon: shoppingBagsIcon },
   { label: '上供', icon: prayerBeadsIcon }
 ];
+
+const FIELD_CLASS_NAME = 'grid gap-2';
+const INPUT_CLASS_NAME = TEXT_INPUT_CLASS_NAME;
+const FLOATING_FIELD_CLASS_NAME = 'grid gap-0';
+const FLOATING_WRAP_CLASS_NAME = 'relative';
+const FLOATING_LABEL_CLASS_NAME = 'pointer-events-none absolute left-[14px] top-1/2 -translate-y-1/2 rounded-full bg-white px-1 text-[14px] font-semibold text-[var(--muted)] transition-all duration-150';
+const FLOATING_INPUT_CLASS_NAME = `${INPUT_CLASS_NAME} peer`;
 
 function createShoppingInitialState(payment = 'Suica') {
   return {
@@ -135,11 +149,12 @@ function renderDateSelect(id, value, onChange) {
 
 function renderInput(label, key, values, setValues, type = 'text', options = []) {
   return (
-    <div className={type === 'select' ? 'field' : 'field field-floating'} key={key}>
+    <div className={type === 'select' ? FIELD_CLASS_NAME : FLOATING_FIELD_CLASS_NAME} key={key}>
       {type === 'select' ? (
         <>
-          <label htmlFor={key}>{label}</label>
+          <label className="font-bold text-[var(--text)]" htmlFor={key}>{label}</label>
           <select
+            className={INPUT_CLASS_NAME}
             id={key}
             value={values[key]}
             onChange={(event) => setValues((current) => ({ ...current, [key]: event.target.value }))}
@@ -152,15 +167,16 @@ function renderInput(label, key, values, setValues, type = 'text', options = [])
           </select>
         </>
       ) : (
-        <div className="floating-input-wrap">
+        <div className={FLOATING_WRAP_CLASS_NAME}>
           <input
+            className={FLOATING_INPUT_CLASS_NAME}
             id={key}
             type={type}
             value={values[key]}
             placeholder=" "
             onChange={(event) => setValues((current) => ({ ...current, [key]: event.target.value }))}
           />
-          <label htmlFor={key}>{label}</label>
+          <label className={`${FLOATING_LABEL_CLASS_NAME} peer-focus:top-0 peer-focus:text-[12px] peer-focus:text-[var(--accent)] peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-[12px] peer-[:not(:placeholder-shown)]:text-[var(--accent)]`} htmlFor={key}>{label}</label>
         </div>
       )}
     </div>
@@ -169,16 +185,17 @@ function renderInput(label, key, values, setValues, type = 'text', options = [])
 
 function renderFloatingManualInput({ id, label, value, onChange, type = 'number' }) {
   return (
-    <div className="field field-floating">
-      <div className="floating-input-wrap">
+    <div className={FLOATING_FIELD_CLASS_NAME}>
+      <div className={FLOATING_WRAP_CLASS_NAME}>
         <input
+          className={FLOATING_INPUT_CLASS_NAME}
           id={id}
           type={type}
           value={value}
           placeholder=" "
           onChange={onChange}
         />
-        <label htmlFor={id}>{label}</label>
+        <label className={`${FLOATING_LABEL_CLASS_NAME} peer-focus:top-0 peer-focus:text-[12px] peer-focus:text-[var(--accent)] peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-[12px] peer-[:not(:placeholder-shown)]:text-[var(--accent)]`} htmlFor={id}>{label}</label>
       </div>
     </div>
   );
@@ -363,31 +380,29 @@ export function LedgerPage() {
       subtitle=""
       currentPath="/ledger.html"
       actions={(
-        <button
-          type="button"
-          className={isRefreshing ? 'icon-button is-spinning' : 'icon-button'}
+        <HeaderIconButton
           aria-label="重新抓取資料"
           title="重新抓取資料"
           onClick={handleRefresh}
           disabled={isRefreshing}
         >
-          <RotateCw size={16} strokeWidth={2.2} />
-        </button>
+          <RotateCw className={isRefreshing ? 'animate-spin' : ''} size={16} strokeWidth={2.2} />
+        </HeaderIconButton>
       )}
     >
       {message ? <StatusBanner>{message}</StatusBanner> : null}
 
-      <section className="ledger-entry-tabs" role="tablist" aria-label="記帳模式">
+      <section className="grid grid-cols-2 gap-[6px] rounded-[12px] bg-[#f3f4f6] p-1" role="tablist" aria-label="記帳模式">
         <button
           type="button"
-          className={entryTab === 'shopping' ? 'ledger-tab-button is-active' : 'ledger-tab-button'}
+          className={entryTab === 'shopping' ? 'min-h-10 rounded-[8px] bg-[#edf4ff] px-4 font-bold text-[var(--accent)]' : 'min-h-10 rounded-[8px] bg-transparent px-4 font-bold text-[var(--muted)]'}
           onClick={() => setEntryTab('shopping')}
         >
           一般消費
         </button>
         <button
           type="button"
-          className={entryTab === 'suica' ? 'ledger-tab-button is-active' : 'ledger-tab-button'}
+          className={entryTab === 'suica' ? 'min-h-10 rounded-[8px] bg-[#edf4ff] px-4 font-bold text-[var(--accent)]' : 'min-h-10 rounded-[8px] bg-transparent px-4 font-bold text-[var(--muted)]'}
           onClick={() => setEntryTab('suica')}
         >
           Suica 儲值
@@ -395,21 +410,22 @@ export function LedgerPage() {
       </section>
 
       {entryTab === 'shopping' ? (
-        <section className="ledger-panel">
-          <form className="ledger-app-form" onSubmit={handleShoppingSubmit}>
-            <section className="ledger-form-section">
-              <div className="ledger-field-grid ledger-field-grid-two">
-                <div className="field">
-                  <label htmlFor="shopping-date">日期</label>
+        <section className="grid gap-[14px]">
+          <form className="grid gap-[14px]" onSubmit={handleShoppingSubmit}>
+            <section className="grid gap-3">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className={FIELD_CLASS_NAME}>
+                  <label className="font-bold text-[var(--text)]" htmlFor="shopping-date">日期</label>
                   {renderDateSelect(
                     'shopping-date',
                     shoppingForm.date,
                     (event) => setShoppingForm((current) => ({ ...current, date: event.target.value })),
                   )}
                 </div>
-                <div className="field">
-                  <label htmlFor="payment">支付</label>
+                <div className={FIELD_CLASS_NAME}>
+                  <label className="font-bold text-[var(--text)]" htmlFor="payment">支付</label>
                   <select
+                    className={INPUT_CLASS_NAME}
                     id="payment"
                     value={shoppingForm.payment}
                     onChange={(event) =>
@@ -430,27 +446,27 @@ export function LedgerPage() {
               </div>
             </section>
 
-            <section className="ledger-form-section">
-              <div className="ledger-section-head">
+            <section className="grid gap-3">
+              <div className="flex items-center justify-between gap-3">
                 <strong>屬性</strong>
                 {CATEGORY_OPTIONS.length > 8 ? (
                   <button
                     type="button"
-                    className="ledger-inline-action"
+                    className="border-0 bg-transparent text-[13px] font-bold text-[var(--accent)]"
                     onClick={() => setShowAllCategories((current) => !current)}
                   >
                     {showAllCategories ? '收合' : '更多'}
                   </button>
                 ) : null}
               </div>
-              <div className="choice-chip-list ledger-choice-chip-list" role="radiogroup" aria-label="屬性">
+              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="屬性">
                 {visibleCategories.map((option) => {
                   const isSelected = shoppingForm.category === option.label;
                   return (
                     <button
                       key={option.label}
                       type="button"
-                      className={isSelected ? 'choice-chip is-selected' : 'choice-chip'}
+                      className={isSelected ? 'inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--accent)] bg-[var(--accent-soft)] px-3 py-2 text-[14px] leading-none text-[var(--accent-deep)]' : 'inline-flex min-h-10 items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-3 py-2 text-[14px] leading-none text-[#4b5563]'}
                       aria-pressed={isSelected}
                       onClick={() =>
                         setShoppingForm((current) => ({
@@ -459,7 +475,7 @@ export function LedgerPage() {
                         }))
                       }
                     >
-                      <img className="choice-chip-icon" src={option.icon} alt="" aria-hidden="true" />
+                      <img className="h-5 w-5 shrink-0" src={option.icon} alt="" aria-hidden="true" />
                       <span>{option.label}</span>
                     </button>
                   );
@@ -467,16 +483,16 @@ export function LedgerPage() {
               </div>
             </section>
 
-            <section className="ledger-form-section">
-              <div className="ledger-field-grid">
+            <section className="grid gap-3">
+              <div className="grid gap-3">
                 {renderInput('商店', 'store', shoppingForm, setShoppingForm)}
                 {renderInput('名稱', 'name', shoppingForm, setShoppingForm)}
                 {renderInput('日文', 'nameJa', shoppingForm, setShoppingForm)}
               </div>
             </section>
 
-            <section className="ledger-form-section">
-              <div className="ledger-price-grid ledger-price-grid-detail">
+            <section className="grid gap-3">
+              <div className="grid items-start gap-3 md:grid-cols-[minmax(0,1fr)_108px_minmax(0,1fr)]">
                 {renderFloatingManualInput({
                   id: 'jpyNet',
                   label: '日幣未稅',
@@ -491,34 +507,23 @@ export function LedgerPage() {
                     setShoppingForm((current) => ({ ...current, jpyNet: value }));
                   },
                 })}
-                <div className="field ledger-tax-field">
-                  <div className="ledger-tax-segmented" role="radiogroup" aria-label="稅">
-                    {TAX_OPTIONS.map((option) => {
-                      const isSelected = shoppingForm.tax === option.value;
-                      return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          className={isSelected ? 'ledger-tax-button is-selected' : 'ledger-tax-button'}
-                          aria-pressed={isSelected}
-                          onClick={() => {
-                            setShoppingCalcState((current) => ({
-                              ...current,
-                              isJpyAmountManual: false,
-                              isTotalManual: false,
-                            }));
-                            setShoppingForm((current) => ({
-                              ...current,
-                              tax: current.tax === option.value ? '' : option.value,
-                            }));
-                          }
-                          }
-                        >
-                          <span>{option.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                <div className={`${FIELD_CLASS_NAME} min-w-[108px]`}>
+                  <SegmentedControl
+                    ariaLabel="稅"
+                    options={TAX_OPTIONS}
+                    value={shoppingForm.tax}
+                    onChange={(nextValue) => {
+                      setShoppingCalcState((current) => ({
+                        ...current,
+                        isJpyAmountManual: false,
+                        isTotalManual: false,
+                      }));
+                      setShoppingForm((current) => ({
+                        ...current,
+                        tax: current.tax === nextValue ? '' : nextValue,
+                      }));
+                    }}
+                  />
                 </div>
                 {renderFloatingManualInput({
                   id: 'jpyAmount',
@@ -535,7 +540,7 @@ export function LedgerPage() {
                   },
                 })}
               </div>
-              <div className="ledger-price-grid ledger-price-grid-top">
+              <div className="grid gap-3 md:grid-cols-2">
                 {renderFloatingManualInput({
                   id: 'quantity',
                   label: '數量',
@@ -564,35 +569,36 @@ export function LedgerPage() {
                 })}
               </div>
               {shouldShowTwdAmount ? (
-                <div className="ledger-field-grid ledger-field-grid-two">
+                <div className="grid gap-3 md:grid-cols-2">
                   {renderInput('台幣', 'twdAmount', shoppingForm, setShoppingForm, 'number')}
                 </div>
               ) : null}
             </section>
 
-            <div className="ledger-submit-bar">
-              <button className="button button-primary ledger-submit-button" type="submit" disabled={isSavingShopping}>
+            <StickySubmitBar>
+              <button className={PRIMARY_BLOCK_BUTTON_CLASS_NAME} type="submit" disabled={isSavingShopping}>
                 {isSavingShopping ? '送出中...' : '新增一般消費'}
               </button>
-            </div>
+            </StickySubmitBar>
           </form>
         </section>
       ) : (
-        <section className="ledger-panel">
-          <form className="ledger-app-form" onSubmit={handleSuicaSubmit}>
-            <section className="ledger-form-section">
-              <div className="ledger-field-grid ledger-field-grid-two">
-                <div className="field">
-                  <label htmlFor="suica-date">日期</label>
+        <section className="grid gap-[14px]">
+          <form className="grid gap-[14px]" onSubmit={handleSuicaSubmit}>
+            <section className="grid gap-3">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className={FIELD_CLASS_NAME}>
+                  <label className="font-bold text-[var(--text)]" htmlFor="suica-date">日期</label>
                   {renderDateSelect(
                     'suica-date',
                     suicaForm.date,
                     (event) => setSuicaForm((current) => ({ ...current, date: event.target.value })),
                   )}
                 </div>
-                <div className="field">
-                  <label htmlFor="chargeJpy">儲值日幣</label>
+                <div className={FIELD_CLASS_NAME}>
+                  <label className="font-bold text-[var(--text)]" htmlFor="chargeJpy">儲值日幣</label>
                   <input
+                    className={INPUT_CLASS_NAME}
                     id="chargeJpy"
                     type="number"
                     value={suicaForm.chargeJpy}
@@ -604,11 +610,11 @@ export function LedgerPage() {
               </div>
             </section>
 
-            <div className="ledger-submit-bar">
-              <button className="button button-primary ledger-submit-button" type="submit" disabled={isSavingSuica}>
+            <StickySubmitBar>
+              <button className={PRIMARY_BLOCK_BUTTON_CLASS_NAME} type="submit" disabled={isSavingSuica}>
                 {isSavingSuica ? '送出中...' : '新增 Suica 儲值'}
               </button>
-            </div>
+            </StickySubmitBar>
           </form>
         </section>
       )}

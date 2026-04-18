@@ -1,7 +1,7 @@
 import { RotateCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
-import { StatusBanner } from '../../shared/ui.jsx';
+import { HeaderIconButton, StatusBanner, TextInput } from '../../shared/ui.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import { getAppData } from '../../lib/gas/client.js';
 import { calcPaymentStatus } from '../../lib/domain/calcPaymentStatus.js';
@@ -72,54 +72,53 @@ export function AdvicePage() {
       subtitle=""
       currentPath="/advice.html"
       actions={(
-        <button
-          type="button"
-          className={isRefreshing ? 'icon-button is-spinning' : 'icon-button'}
+        <HeaderIconButton
           aria-label="重新抓取資料"
           title="重新抓取資料"
           onClick={handleRefresh}
           disabled={isRefreshing}
         >
-          <RotateCw size={16} strokeWidth={2.2} />
-        </button>
+          <RotateCw className={isRefreshing ? 'animate-spin' : ''} size={16} strokeWidth={2.2} />
+        </HeaderIconButton>
       )}
     >
       {message ? <StatusBanner>{message}</StatusBanner> : null}
-      <section className="advice-input-row">
-        <div className="field field-floating is-full">
-          <div className="floating-input-wrap">
-            <input
-              id="amountJpy"
-              type="number"
-              min="0"
-              placeholder=" "
-              value={form.amountJpy}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, amountJpy: event.target.value }))
-              }
-            />
-            <label htmlFor="amountJpy">日幣金額</label>
-          </div>
+      <section className="grid gap-3">
+        <div className="grid gap-2">
+          <label className="font-bold text-[var(--text)]" htmlFor="amountJpy">
+            日幣金額
+          </label>
+          <TextInput
+            id="amountJpy"
+            type="number"
+            min="0"
+            value={form.amountJpy}
+            onChange={(event) =>
+              setForm((current) => ({ ...current, amountJpy: event.target.value }))
+            }
+          />
         </div>
       </section>
-      <section className="advice-section">
-        <div className="advice-section-head">
-          <h3>推薦順序</h3>
-          <span className="advice-section-meta">
+      <section className="grid gap-3">
+        <div className="flex items-baseline justify-between gap-3">
+          <h3 className="m-0 text-[17px]">推薦順序</h3>
+          <span className="text-[12px] font-semibold whitespace-nowrap text-[var(--muted)]">
             {formatCurrency(form.amountJpy, 'JPY')} / {formatCurrency(toNumber(form.amountJpy) * latestRate, 'TWD')}
           </span>
         </div>
-        <div className="advice-list">
+        <div className="grid gap-3">
           {adviceList.map((item, index) => (
-            <article className="advice-item" key={item.paymentPlan}>
-              <div className="advice-rank">#{index + 1}</div>
-              <div className="advice-item-body">
-                <div className="advice-head">
-                  <div className="advice-title-block">
-                    <strong>{item.paymentPlan}</strong>
-                    <span>{formatCurrency(item.reward, 'TWD')} 回饋</span>
+            <article className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-[14px] rounded-[14px] border border-[var(--line)] bg-white p-4" key={item.paymentPlan}>
+              <div className="inline-flex min-h-[42px] min-w-[42px] items-center justify-center rounded-[12px] bg-[#f5f7fa] text-[13px] font-extrabold text-[var(--accent)]">
+                #{index + 1}
+              </div>
+              <div className="grid gap-[10px]">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="grid gap-1">
+                    <strong className="text-[16px] leading-[1.2]">{item.paymentPlan}</strong>
+                    <span className="text-[13px] font-semibold text-[var(--muted)]">{formatCurrency(item.reward, 'TWD')} 回饋</span>
                   </div>
-                  <span className="advice-rate">{formatPercent(item.effectiveRewardRate)}</span>
+                  <span className="text-[15px] font-extrabold whitespace-nowrap text-[var(--accent)]">{formatPercent(item.effectiveRewardRate)}</span>
                 </div>
               </div>
             </article>
