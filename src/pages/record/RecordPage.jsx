@@ -200,7 +200,7 @@ export function RecordPage() {
       {isLoading ? (
         <StatusBanner tone="neutral">正在整理資料...</StatusBanner>
       ) : (
-        <form className="grid gap-[14px]" onSubmit={handleSubmit}>
+        <form className="grid gap-6 pt-2" onSubmit={handleSubmit}>
           <ShoppingFormFields
             form={form}
             setForm={setForm}

@@ -173,7 +173,7 @@ export function OverviewPage() {
             </div>
           </PanelCard>
           <section className="grid gap-3">
-            <div className="grid gap-[14px]">
+            <div className="grid gap-6">
               {state.groupedRecords.map((group) => (
                 <section className="grid gap-[10px]" key={group.date}>
                   <header className="flex items-center justify-between gap-3 text-[14px]">

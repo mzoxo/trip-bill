@@ -6,7 +6,7 @@ function joinClassNames(...values) {
 
 export const PANEL_CARD_CLASS_NAME = 'rounded-[10px] border border-[var(--line)] bg-white';
 export const TEXT_INPUT_CLASS_NAME = 'min-h-11 w-full rounded-[10px] border border-[#e5e7eb] bg-white px-[14px] py-[10px] text-[var(--text)] outline-none transition focus:border-[var(--accent)]';
-export const HEADER_ICON_BUTTON_CLASS_NAME = 'inline-flex h-6 w-6 items-center justify-center rounded-full border border-[var(--line)] bg-white text-[var(--accent)] disabled:opacity-60';
+export const HEADER_ICON_BUTTON_CLASS_NAME = 'inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--line)] bg-white text-[var(--accent)] disabled:opacity-60';
 export const PRIMARY_BUTTON_CLASS_NAME = 'rounded-full border border-transparent bg-[var(--accent)] px-4 py-[10px] font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-60';
 export const PRIMARY_BLOCK_BUTTON_CLASS_NAME = 'min-h-12 w-full rounded-[10px] border border-transparent bg-[var(--accent)] px-4 py-[10px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-60';
 export const DANGER_BLOCK_BUTTON_CLASS_NAME = 'min-h-12 min-w-24 rounded-[10px] border border-transparent bg-[#d9485f] px-4 py-[10px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-60';

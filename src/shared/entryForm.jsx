@@ -52,20 +52,20 @@ const FLOATING_LABEL_CLASS_NAME = 'pointer-events-none absolute left-[14px] top-
 const FLOATING_INPUT_CLASS_NAME = `${TEXT_INPUT_CLASS_NAME} peer`;
 
 export function EntryFormSection({ className = '', children }) {
-  return <section className={joinClassNames('grid gap-3', className)}>{children}</section>;
+  return <section className={joinClassNames('grid gap-4', className)}>{children}</section>;
 }
 
 export function EntryFieldStack({ className = '', children }) {
-  return <div className={joinClassNames('grid gap-3', className)}>{children}</div>;
+  return <div className={joinClassNames('grid gap-4', className)}>{children}</div>;
 }
 
 export function EntryTwoColumnRow({ className = '', children }) {
-  return <div className={joinClassNames('grid grid-cols-2 gap-3', className)}>{children}</div>;
+  return <div className={joinClassNames('grid grid-cols-2 gap-4', className)}>{children}</div>;
 }
 
 export function EntryTripleAmountRow({ className = '', children }) {
   return (
-    <div className={joinClassNames('grid items-start gap-3 grid-cols-[minmax(0,1fr)_108px_minmax(0,1fr)]', className)}>
+    <div className={joinClassNames('grid items-start gap-4 grid-cols-[minmax(0,1fr)_108px_minmax(0,1fr)]', className)}>
       {children}
     </div>
   );

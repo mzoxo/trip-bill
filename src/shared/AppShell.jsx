@@ -16,7 +16,7 @@ export function AppShell({ title, subtitle, currentPath, children, actions, hide
             <div className="page-header-side">
               {backHref ? (
                 <a
-                  className="inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-[var(--line)] bg-white px-2 text-[var(--accent)]"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--line)] bg-white text-[var(--accent)]"
                   href={backHref}
                   aria-label="返回"
                   title="返回"
@@ -33,7 +33,7 @@ export function AppShell({ title, subtitle, currentPath, children, actions, hide
               {actions ? <div className="actions-row flex flex-wrap gap-3">{actions}</div> : null}
             </div>
           </header>
-          <div className="page-content grid gap-4 pt-4">{children}</div>
+          <div className="grid gap-4 pt-4">{children}</div>
           {hideNavigation ? null : (
             <nav className="bottom-nav">
               {NAV_ITEMS.map((item) => (

@@ -308,8 +308,8 @@ export function LedgerPage() {
       </section>
 
       {entryTab === 'shopping' ? (
-        <section className="grid gap-[14px]">
-          <form className="grid gap-[14px]" onSubmit={handleShoppingSubmit}>
+        <section className="grid gap-6">
+          <form className="grid gap-6" onSubmit={handleShoppingSubmit}>
             <ShoppingFormFields
               form={shoppingForm}
               setForm={setShoppingForm}
@@ -336,8 +336,8 @@ export function LedgerPage() {
           </form>
         </section>
       ) : (
-        <section className="grid gap-[14px]">
-          <form className="grid gap-[14px]" onSubmit={handleSuicaSubmit}>
+        <section className="grid gap-6">
+          <form className="grid gap-6" onSubmit={handleSuicaSubmit}>
             <EntryFormSection>
               <EntryTwoColumnRow>
                 <FloatingSelect

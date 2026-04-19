@@ -85,7 +85,7 @@ export function PaymentPage() {
         <StatusBanner tone="neutral">目前沒有這個支付方式的消費紀錄</StatusBanner>
       ) : (
         <section className="grid gap-3">
-          <div className="grid gap-[14px]">
+          <div className="grid gap-6">
             {groupedRecords.map((group) => (
               <section className="grid gap-[10px]" key={group.date}>
                 <header className="flex items-center justify-between gap-3 text-[14px]">

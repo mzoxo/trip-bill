@@ -55,12 +55,12 @@ export function SettingsPage() {
       hideNavigation
     >
       <StatusBanner tone={tone}>{message}</StatusBanner>
-      <section className="grid gap-4">
+      <section className="grid gap-6">
         <PanelCard className="p-[18px]">
           <div className="mb-[18px]">
             <h3 className="m-0 text-base font-semibold text-[var(--text)]">連線設定</h3>
           </div>
-          <form className="grid gap-[14px]" onSubmit={handleSave}>
+          <form className="grid gap-6" onSubmit={handleSave}>
             <div className="grid gap-2">
               <label className="font-bold text-[var(--text)]" htmlFor="webAppUrl">
                 Google Apps Script Web App URL
