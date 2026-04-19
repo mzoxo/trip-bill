@@ -70,7 +70,19 @@ export function AdvicePage() {
       title="建議"
       subtitle=""
       currentPath={appUrl('/advice.html')}
-      actions={<RefreshButton isRefreshing={isRefreshing} onRefresh={handleRefresh} />}
+      actions={(
+        <>
+          <a
+            className="inline-flex min-h-8 items-center rounded-full border border-[var(--accent-soft)] bg-white px-3 text-[12px] font-bold whitespace-nowrap text-[var(--accent)]"
+            href="https://mzoxo.github.io/price-compare/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            單位換算
+          </a>
+          <RefreshButton isRefreshing={isRefreshing} onRefresh={handleRefresh} />
+        </>
+      )}
     >
       {isRefreshing ? <SaveOverlay>重新抓取資料中</SaveOverlay> : null}
       {message ? <StatusBanner>{message}</StatusBanner> : null}
@@ -79,15 +91,27 @@ export function AdvicePage() {
           <label className="font-bold text-[var(--text)]" htmlFor="amountJpy">
             日幣金額
           </label>
-          <TextInput
-            id="amountJpy"
-            type="number"
-            min="0"
-            value={form.amountJpy}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, amountJpy: event.target.value }))
-            }
-          />
+          <div className="flex items-center gap-2">
+            <TextInput
+              className="flex-1"
+              id="amountJpy"
+              type="number"
+              min="0"
+              value={form.amountJpy}
+              onChange={(event) =>
+                setForm((current) => ({ ...current, amountJpy: event.target.value }))
+              }
+            />
+            {form.amountJpy ? (
+              <button
+                className="inline-flex min-h-11 shrink-0 items-center rounded-[10px] border border-[var(--line)] bg-white px-3 text-[12px] font-bold text-[var(--muted)]"
+                type="button"
+                onClick={() => setForm((current) => ({ ...current, amountJpy: '' }))}
+              >
+                清除
+              </button>
+            ) : null}
+          </div>
         </div>
       </section>
       <section className="grid gap-3">
