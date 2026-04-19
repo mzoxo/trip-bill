@@ -82,6 +82,17 @@ function writeAppDataCache(webAppUrl, token, data) {
   );
 }
 
+function isCompleteAppDataCache(data) {
+  if (!data || typeof data !== 'object') {
+    return false;
+  }
+
+  return Array.isArray(data.shoppingRecords)
+    && Array.isArray(data.suicaRecords)
+    && Array.isArray(data.paymentRules)
+    && Boolean(data.latestRate);
+}
+
 export function clearAppDataCache(webAppUrl, token) {
   const cached = webAppUrl && token ? readAppDataCache(webAppUrl, token) : null;
   window.localStorage.removeItem(APP_DATA_CACHE_KEY);
@@ -123,7 +134,7 @@ export async function getAppData(webAppUrl, token = '', options = {}) {
 
   if (!forceRefresh) {
     if (cached) {
-      if (!cached.latestRate) {
+      if (!isCompleteAppDataCache(cached)) {
         return getAppData(webAppUrl, token, { forceRefresh: true });
       }
       return { success: true, data: cached, message: '' };

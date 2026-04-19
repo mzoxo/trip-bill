@@ -10,9 +10,14 @@
   - `.codex/sessions/session-state.md`
   - `.codex/sessions/session-2026-04-19-165729-github-pages-deploy.md`
   - `src/pages/advice/AdvicePage.jsx`
+  - `src/pages/record/RecordPage.jsx`
+  - `src/lib/gas/client.js`
 - 目前狀態：
   - 已確認 `.github/workflows/deploy.yml` 與 `vite.config.js` 設定正確
   - 目前根因指向 GitHub Pages 後台仍在直接發佈原始碼分支，而不是 Actions 建置產物
   - GitHub Pages 已重新部署成功
   - 已新增建議頁右上角外部連結，指向 `https://mzoxo.github.io/price-compare/`
   - 已新增建議頁日幣金額快速清除按鈕，點擊可清空輸入值
+  - 已補上編輯交易頁的金額連動邏輯，讓日幣金額與數量會同步回算日幣總計
+  - 已修正編輯交易頁載入既有資料時誤清空日幣金額與日幣總計的問題
+  - 已修正刪除交易後回列表誤讀殘缺快取導致資料全空的問題

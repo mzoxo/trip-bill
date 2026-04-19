@@ -20,6 +20,13 @@ import {
   updateShoppingRecord,
 } from '../../lib/gas/client.js';
 
+function createShoppingCalculationState() {
+  return {
+    hasInteracted: false,
+    isJpyAmountManual: false,
+    isTotalManual: false,
+  };
+}
 
 function createInitialForm() {
   return {
@@ -69,6 +76,26 @@ function roundIntegerString(value) {
   return String(Math.round(number));
 }
 
+function calculateTaxIncludedAmount(jpyNet, tax) {
+  const base = Number(jpyNet);
+  if (!Number.isFinite(base) || base <= 0) {
+    return '';
+  }
+
+  const multiplier = tax === '8%' ? 1.08 : tax === '10%' ? 1.1 : 1;
+  return String(Math.round(base * multiplier));
+}
+
+function calculateLineTotal(quantity, amount) {
+  const qty = Number(quantity);
+  const value = Number(amount);
+  if (!Number.isFinite(qty) || !Number.isFinite(value) || qty <= 0 || value <= 0) {
+    return '';
+  }
+
+  return String(Math.round(qty * value));
+}
+
 export function RecordPage() {
   const rowNumber = useMemo(
     () => new URLSearchParams(window.location.search).get('row') || '',
@@ -77,6 +104,7 @@ export function RecordPage() {
   const [settings, setSettings] = useState({ webAppUrl: '', token: '' });
   const [paymentRules, setPaymentRules] = useState([]);
   const [form, setForm] = useState(createInitialForm);
+  const [calcState, setCalcState] = useState(() => createShoppingCalculationState());
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -112,6 +140,7 @@ export function RecordPage() {
       jpyAmount: roundIntegerString(record.jpyAmount),
       total: roundIntegerString(record.total),
     });
+    setCalcState(createShoppingCalculationState());
     setMessage(result.message || '');
     setIsLoading(false);
   }
@@ -179,11 +208,90 @@ export function RecordPage() {
   const selectedPaymentRule = paymentRules.find((r) => r.paymentPlan === form.payment);
   const shouldShowTwdAmount = selectedPaymentRule?.paymentType === 'paypay' || Number(form.twdAmount) !== 0;
 
-  function handleJpyNetChange(value) { setForm((c) => ({ ...c, jpyNet: value })); }
-  function handleTaxChange(value) { setForm((c) => ({ ...c, tax: c.tax === value ? '' : value })); }
-  function handleJpyAmountChange(value) { setForm((c) => ({ ...c, jpyAmount: value })); }
-  function handleQuantityChange(value) { setForm((c) => ({ ...c, quantity: value })); }
-  function handleTotalChange(value) { setForm((c) => ({ ...c, total: value })); }
+  function handleJpyNetChange(value) {
+    setCalcState((current) => ({
+      ...current,
+      hasInteracted: true,
+      isJpyAmountManual: false,
+      isTotalManual: false,
+    }));
+    setForm((current) => ({ ...current, jpyNet: value }));
+  }
+
+  function handleTaxChange(value) {
+    setCalcState((current) => ({
+      ...current,
+      hasInteracted: true,
+      isJpyAmountManual: false,
+      isTotalManual: false,
+    }));
+    setForm((current) => ({ ...current, tax: current.tax === value ? '' : value }));
+  }
+
+  function handleJpyAmountChange(value) {
+    setCalcState((current) => ({
+      ...current,
+      hasInteracted: true,
+      isJpyAmountManual: true,
+      isTotalManual: false,
+    }));
+    setForm((current) => ({ ...current, jpyAmount: value }));
+  }
+
+  function handleQuantityChange(value) {
+    setCalcState((current) => ({
+      ...current,
+      hasInteracted: true,
+      isTotalManual: false,
+    }));
+    setForm((current) => ({ ...current, quantity: value }));
+  }
+
+  function handleTotalChange(value) {
+    setCalcState((current) => ({
+      ...current,
+      hasInteracted: true,
+      isTotalManual: true,
+    }));
+    setForm((current) => ({ ...current, total: value }));
+  }
+
+  useEffect(() => {
+    if (!calcState.hasInteracted) {
+      return;
+    }
+
+    setForm((current) => {
+      let changed = false;
+      const next = { ...current };
+
+      if (!calcState.isJpyAmountManual) {
+        const nextJpyAmount = calculateTaxIncludedAmount(current.jpyNet, current.tax);
+        if (nextJpyAmount !== current.jpyAmount) {
+          next.jpyAmount = nextJpyAmount;
+          changed = true;
+        }
+      }
+
+      if (!calcState.isTotalManual) {
+        const nextTotal = calculateLineTotal(current.quantity, next.jpyAmount);
+        if (nextTotal !== current.total) {
+          next.total = nextTotal;
+          changed = true;
+        }
+      }
+
+      return changed ? next : current;
+    });
+  }, [
+    form.jpyNet,
+    form.tax,
+    form.quantity,
+    form.jpyAmount,
+    calcState.hasInteracted,
+    calcState.isJpyAmountManual,
+    calcState.isTotalManual,
+  ]);
 
   return (
     <AppShell
