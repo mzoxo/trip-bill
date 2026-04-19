@@ -91,7 +91,7 @@ export function AdvicePage() {
       </section>
       <section className="grid gap-3">
         <div className="flex items-baseline justify-between gap-3">
-          <h3 className="m-0 text-[17px]">推薦順序</h3>
+          <h3 className="m-0 text-[16px]">推薦順序</h3>
           <span className="text-[12px] font-semibold whitespace-nowrap text-[var(--muted)]">
             {formatCurrency(form.amountJpy, 'JPY')} / {formatCurrency(toNumber(form.amountJpy) * latestRate, 'TWD')}
           </span>
@@ -99,16 +99,16 @@ export function AdvicePage() {
         <div className="grid gap-3">
           {adviceList.map((item, index) => (
             <article className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-[14px] rounded-[14px] border border-[var(--line)] bg-white p-4" key={item.paymentPlan}>
-              <div className="inline-flex min-h-[42px] min-w-[42px] items-center justify-center rounded-[12px] bg-[#f5f7fa] text-[13px] font-extrabold text-[var(--accent)]">
+              <div className="inline-flex min-h-[42px] min-w-[42px] items-center justify-center rounded-[12px] bg-[var(--accent-soft)] text-[12px] font-extrabold text-[var(--accent)]">
                 #{index + 1}
               </div>
               <div className="grid gap-[10px]">
                 <div className="flex items-start justify-between gap-3">
                   <div className="grid gap-1">
                     <strong className="text-[16px] leading-[1.2]">{item.paymentPlan}</strong>
-                    <span className="text-[13px] font-semibold text-[var(--muted)]">{formatCurrency(item.reward, 'TWD')} 回饋</span>
+                    <span className="text-[12px] font-semibold text-[var(--muted)]">{formatCurrency(item.reward, 'TWD')} 回饋</span>
                   </div>
-                  <span className="text-[15px] font-extrabold whitespace-nowrap text-[var(--accent)]">{formatPercent(item.effectiveRewardRate)}</span>
+                  <span className="text-[16px] font-extrabold whitespace-nowrap text-[var(--accent)]">{formatPercent(item.effectiveRewardRate)}</span>
                 </div>
               </div>
             </article>

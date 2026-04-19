@@ -64,6 +64,7 @@ export function OverviewPage() {
     groupedRecords: [],
     rateInfo: null,
     rateMap: {},
+    paypaySet: new Set(),
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -101,6 +102,7 @@ export function OverviewPage() {
       }),
       rateInfo: latestRate,
       rateMap,
+      paypaySet,
     });
   }
 
@@ -161,7 +163,7 @@ export function OverviewPage() {
                   </p>
                   <p className="m-0 text-[14px]">
                     {isOverBudget ? '超支' : '剩餘'}{' '}
-                    <span className={isOverBudget ? 'inline-block rounded-full bg-[#ffefef] px-[10px] text-[#ef4444] font-bold' : 'inline-block rounded-full bg-[#f3f4f6] px-[10px] text-[#4b5563] font-bold'}>
+                    <span className={isOverBudget ? 'inline-block rounded-full bg-[var(--warning-soft)] px-[10px] text-[var(--warning)] font-bold' : 'inline-block rounded-full bg-[#f3f4f6] px-[10px] font-bold'}>
                       {formatCurrency(isOverBudget ? overspend : remaining, 'TWD')}
                     </span>
                   </p>
@@ -180,7 +182,7 @@ export function OverviewPage() {
                 <section className="grid gap-[10px]" key={group.date}>
                   <header className="flex items-center justify-between gap-3 text-[14px]">
                     <strong>{group.label}</strong>
-                    <span className="whitespace-nowrap text-[#ef4444]">
+                    <span className="whitespace-nowrap text-[var(--warning)]">
                       -{formatCurrency(group.expenseTwd, 'TWD')}
                     </span>
                   </header>
@@ -206,7 +208,7 @@ export function OverviewPage() {
                             ) : null}
                           </>
                         )}
-                        primary={formatPrimaryAmount(record, state.rateMap, state.rateInfo?.rate)}
+                        primary={formatPrimaryAmount(record, state.rateMap, state.rateInfo?.rate, state.paypaySet)}
                         secondary={formatSecondaryAmount(record)}
                       />
                     ))}
@@ -216,7 +218,7 @@ export function OverviewPage() {
             </div>
           </section>
 
-          <a className="fixed bottom-[72px] left-1/2 inline-flex min-h-[52px] min-w-[140px] -translate-x-1/2 items-center justify-center rounded-full border border-[var(--line)] bg-white px-4 font-extrabold text-[#111111]" href="/ledger.html">
+          <a className="fixed bottom-[72px] left-1/2 inline-flex min-h-[52px] min-w-[140px] -translate-x-1/2 items-center justify-center rounded-full  px-4 font-extrabold bg-[var(--accent)] text-[#ffffff]" href="/ledger.html">
             記帳
           </a>
         </>
@@ -271,7 +273,7 @@ function renderQuantity(quantity) {
     return null;
   }
 
-  return <span className="text-[13px] font-semibold text-[var(--muted)]"> X{amount}</span>;
+  return <span className="text-[12px] font-semibold text-[var(--muted)]"> X{amount}</span>;
 }
 
 function getCategoryIcon(category) {
@@ -279,7 +281,10 @@ function getCategoryIcon(category) {
   return <img className="h-5 w-5" src={icon} alt="" aria-hidden="true" />;
 }
 
-function formatPrimaryAmount(record, rateMap, fallbackRate) {
+function formatPrimaryAmount(record, rateMap, fallbackRate, paypaySet) {
+  if (paypaySet?.has(record.payment) && toNumber(record.twdAmount) > 0) {
+    return formatCurrency(toNumber(record.twdAmount), 'TWD');
+  }
   const estimatedTwd = getEstimatedRecordTwdCost(
     record,
     rateMap,
@@ -294,13 +299,13 @@ function formatSecondaryAmount(record) {
 }
 
 function getBudgetRingClassName(totalCost, overspend) {
-  const baseClassName = 'relative grid h-[50px] w-[50px] place-items-center rounded-full bg-[conic-gradient(var(--budget-fill)_0_var(--budget-progress,0%),var(--budget-track)_var(--budget-progress,0%)_100%)] font-bold text-[#4b5563] before:absolute before:inset-1 before:rounded-full before:bg-white before:content-[""]';
+  const baseClassName = 'relative grid h-[50px] w-[50px] place-items-center rounded-full bg-[conic-gradient(var(--budget-fill)_0_var(--budget-progress,0%),var(--budget-track)_var(--budget-progress,0%)_100%)] font-bold  before:absolute before:inset-1 before:rounded-full before:bg-white before:content-[""]';
   if (overspend > 0) {
-    return `${baseClassName} [--budget-track:#e5e7eb] [--budget-fill:#ef4444]`;
+    return `${baseClassName} [--budget-track:#e5e7eb] [--budget-fill:var(--warning)]`;
   }
 
   if (totalCost > 0) {
-    return `${baseClassName} [--budget-track:#e5e7eb] [--budget-fill:#22c55e]`;
+    return `${baseClassName} [--budget-track:#e5e7eb] [--budget-fill:var(--success)]`;
   }
 
   return `${baseClassName} [--budget-track:#e5e7eb] [--budget-fill:#d1d5db]`;

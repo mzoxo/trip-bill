@@ -6,12 +6,12 @@ function joinClassNames(...values) {
 
 export const PANEL_CARD_CLASS_NAME = 'rounded-[10px] border border-[var(--line)] bg-white';
 export const TEXT_INPUT_CLASS_NAME = 'min-h-11 w-full rounded-[10px] border border-[#e5e7eb] bg-white px-[14px] py-[10px] text-[var(--text)] outline-none transition focus:border-[var(--accent)]';
-export const HEADER_ICON_BUTTON_CLASS_NAME = 'inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--line)] bg-white text-[var(--accent)] disabled:opacity-60';
+export const HEADER_ICON_BUTTON_CLASS_NAME = 'inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--accent-soft)] bg-white text-[var(--accent)] disabled:opacity-60';
 export const PRIMARY_BUTTON_CLASS_NAME = 'rounded-full border border-transparent bg-[var(--accent)] px-4 py-[10px] font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-60';
 export const PRIMARY_BLOCK_BUTTON_CLASS_NAME = 'min-h-12 w-full rounded-[10px] border border-transparent bg-[var(--accent)] px-4 py-[10px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-60';
-export const DANGER_BLOCK_BUTTON_CLASS_NAME = 'min-h-12 min-w-24 rounded-[10px] border border-transparent bg-[#d9485f] px-4 py-[10px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-60';
+export const DANGER_BLOCK_BUTTON_CLASS_NAME = 'min-h-12 min-w-24 rounded-[10px] border border-[var(--warning)] bg-white px-4 py-[10px] font-bold text-[var(--warning)] disabled:cursor-not-allowed disabled:opacity-60';
 export const SECONDARY_BUTTON_CLASS_NAME = 'rounded-full border border-[var(--line)] bg-white px-4 py-[10px] font-bold text-[var(--text)] transition disabled:cursor-not-allowed disabled:opacity-60';
-export const BACK_LINK_CLASS_NAME = 'text-[13px] font-bold text-[var(--accent)]';
+export const BACK_LINK_CLASS_NAME = 'text-[12px] font-bold text-[var(--accent)]';
 export const CATEGORY_CHIP_CLASS_NAME = 'inline-flex min-h-5 items-center rounded-full bg-[var(--accent-soft)] px-2 text-[12px] font-bold leading-none text-[var(--accent-deep)]';
 
 export function PanelCard({ className = '', children, ...props }) {
@@ -123,7 +123,7 @@ export function CategoryChip({ className = '', children }) {
 
 export function LoadingCard({ className = '', children = '資料整理中' }) {
   return (
-    <article className={joinClassNames('flex items-center gap-2 rounded-[14px] border border-[#f0f0f0] bg-white p-4', className)}>
+    <article className={joinClassNames('flex items-center gap-2 rounded-[14px] border border-[var(--line)] bg-white p-4', className)}>
       <Loader2 size={16} strokeWidth={2} className="animate-spin shrink-0 text-[var(--accent)]" />
       <strong>{children}</strong>
     </article>
@@ -144,7 +144,7 @@ export function SegmentedControl({ options, value, onChange, ariaLabel, classNam
           <button
             key={option.value}
             type="button"
-            className={isSelected ? 'min-h-[34px] rounded-[8px] bg-[#edf4ff] text-[13px] font-bold text-[var(--accent)]' : 'min-h-[34px] rounded-[8px] bg-transparent text-[13px] font-bold text-[var(--muted)]'}
+            className={isSelected ? 'min-h-[34px] rounded-[8px] bg-[var(--accent-soft)] text-[12px] font-bold text-[var(--accent-deep)]' : 'min-h-[34px] rounded-[8px] bg-transparent text-[12px] font-bold text-[var(--muted)]'}
             aria-pressed={isSelected}
             onClick={() => onChange(option.value)}
           >
@@ -158,7 +158,7 @@ export function SegmentedControl({ options, value, onChange, ariaLabel, classNam
 
 export function StickySubmitBar({ className = '', children }) {
   return (
-    <div className={joinClassNames('sticky bottom-[24px] bg-[linear-gradient(180deg,rgba(245,247,250,0)_0%,#f5f7fa_26%)] pt-[6px]', className)}>
+    <div className={joinClassNames('sticky bottom-[24px] bg-[linear-gradient(180deg,rgba(255,255,255,0)_0%,#ffffff_26%)] pt-[6px]', className)}>
       {children}
     </div>
   );
@@ -178,7 +178,7 @@ export function AssetStatusCard({
 }) {
   return (
     <article
-      className={joinClassNames('grid gap-[10px] rounded-[14px] border border-[#f0f0f0] bg-white px-4 py-3', className)}
+      className={joinClassNames('grid gap-[10px] rounded-[14px] border border-[var(--line)] bg-white px-4 py-3', className)}
       role="link"
       tabIndex={0}
       onClick={onClick}
@@ -195,7 +195,7 @@ export function AssetStatusCard({
           </div>
         </div>
         <div className="grid justify-items-end gap-0.5">
-          <strong className={joinClassNames('m-0 text-right text-[15px] font-bold whitespace-nowrap', amountClassName)}>
+          <strong className={joinClassNames('m-0 text-right text-[16px] font-bold whitespace-nowrap', amountClassName)}>
             {amount}
           </strong>
           {helper}

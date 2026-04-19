@@ -320,14 +320,14 @@ export function LedgerPage() {
       <section className="grid grid-cols-2 gap-[6px] rounded-[12px] border border-[var(--line)] bg-white p-1" role="tablist" aria-label="記帳模式">
         <button
           type="button"
-          className={entryTab === 'shopping' ? 'min-h-10 rounded-[8px] bg-[#edf4ff] px-4 font-bold text-[var(--accent)]' : 'min-h-10 rounded-[8px] bg-transparent px-4 font-bold text-[var(--muted)]'}
+          className={entryTab === 'shopping' ? 'min-h-10 rounded-[8px] bg-[var(--accent-soft)] px-4 font-bold text-[var(--accent-deep)]' : 'min-h-10 rounded-[8px] bg-transparent px-4 font-bold text-[var(--muted)]'}
           onClick={() => setEntryTab('shopping')}
         >
           一般消費
         </button>
         <button
           type="button"
-          className={entryTab === 'suica' ? 'min-h-10 rounded-[8px] bg-[#edf4ff] px-4 font-bold text-[var(--accent)]' : 'min-h-10 rounded-[8px] bg-transparent px-4 font-bold text-[var(--muted)]'}
+          className={entryTab === 'suica' ? 'min-h-10 rounded-[8px] bg-[var(--accent-soft)] px-4 font-bold text-[var(--accent-deep)]' : 'min-h-10 rounded-[8px] bg-transparent px-4 font-bold text-[var(--muted)]'}
           onClick={() => setEntryTab('suica')}
         >
           Suica 儲值

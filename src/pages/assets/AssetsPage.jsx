@@ -175,7 +175,7 @@ export function AssetsPage() {
                       className={getIconRingClassName(item)}
                       style={{ '--usage-progress': `${Math.max(Math.round((item.cumulativeUsageRate ?? 0) * 100), 6)}%` }}
                     >
-                      <div className="relative z-[1] grid h-10 w-10 place-items-center text-[#1285c6]">
+                      <div className="relative z-[1] grid h-10 w-10 place-items-center text-[var(--accent)]">
                         <Wallet size={18} strokeWidth={2.2} />
                       </div>
                     </div>
@@ -191,22 +191,22 @@ export function AssetsPage() {
                     title="額滿公告"
                     onClick={(event) => event.stopPropagation()}
                   >
-                    <ExternalLink size={14} strokeWidth={2.2} />
+                    <ExternalLink size={14} strokeWidth={2.2} className='text-[var(--accent)]' />
                   </a>
                 ) : null}
                 amount={formatCurrency(item.usedTwd, 'TWD')}
-                amountClassName={isOverLimit(item) ? 'text-[#d9485f]' : ''}
+                amountClassName={isOverLimit(item) ? 'text-[var(--warning)]' : ''}
                 helper={item.paymentPlan === 'Suica' && state.latestRate ? (
-                  <span className="text-right text-[12px] text-[#b0b0b0]">
+                  <span className="text-right text-[12px] text-[var(--muted)]">
                     剩餘 {formatCurrency(suicaRemainingTwd, 'TWD')}
                   </span>
                 ) : item.cumulativeLimitTwd ? (
-                  <span className="text-right text-[12px] text-[#b0b0b0]">
+                  <span className="text-right text-[12px] text-[var(--muted)]">
                     剩餘 {formatCurrency(item.cumulativeRemainingTwd, 'TWD')}
                   </span>
                 ) : null}
                 summary={{
-                  className: isOverLimit(item) ? 'm-0 text-[12px] leading-[1.5] text-[#d9485f]' : 'm-0 text-[12px] leading-[1.5] text-[#a1a1aa]',
+                  className: isOverLimit(item) ? 'm-0 text-[12px] leading-[1.5] text-[var(--warning)]' : 'm-0 text-[12px] leading-[1.5] text-[var(--muted)]',
                   content: (
                     <>
                       {formatPercent(item.rewardRate)} 回饋
@@ -233,8 +233,8 @@ export function AssetsPage() {
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 id="payment-settings-title" className="m-0 text-[17px]">支付方式設定</h3>
-                <p className="mt-1.5 text-[13px] leading-[1.5] text-[var(--muted)]">關閉後不會出現在建議頁推薦順序。</p>
+                <h3 id="payment-settings-title" className="m-0 text-[16px]">支付方式設定</h3>
+                <p className="mt-1.5 text-[12px] leading-[1.5] text-[var(--muted)]">關閉後不會出現在建議頁推薦順序。</p>
               </div>
               <HeaderIconButton
                 aria-label="關閉設定"
@@ -275,14 +275,14 @@ function getIconRingClassName(item) {
   const baseClassName = 'relative grid h-10 w-10 place-items-center rounded-full bg-[conic-gradient(var(--ring-fill)_0_var(--usage-progress,0%),var(--ring-track)_var(--usage-progress,0%)_100%)] before:absolute before:inset-[3px] before:rounded-full before:bg-white before:content-[""]';
 
   if (item.hasReachedCumulativeLimit || item.hasReachedSingleLimit) {
-    return `${baseClassName} [--ring-track:#eef3fb] [--ring-fill:#e79991]`;
+    return `${baseClassName} [--ring-track:var(--asset-ring-track)] [--ring-fill:var(--asset-ring-over)]`;
   }
 
   if (item.cumulativeUsageRate !== null && item.cumulativeUsageRate >= 0.9) {
-    return `${baseClassName} [--ring-track:#eef3fb] [--ring-fill:#e8c27d]`;
+    return `${baseClassName} [--ring-track:var(--asset-ring-track)] [--ring-fill:var(--asset-ring-near)]`;
   }
 
-  return `${baseClassName} [--ring-track:#eef3fb] [--ring-fill:#c7d8f7]`;
+  return `${baseClassName} [--ring-track:var(--asset-ring-track)] [--ring-fill:var(--asset-ring-normal)]`;
 }
 
 function getCurrentRuleEnabled(paymentPlan, rules) {

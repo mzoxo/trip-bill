@@ -23,6 +23,7 @@ export function PaymentPage() {
     latestRate: 0,
     baseYear: new Date().getFullYear(),
     rateMap: {},
+    isPaypay: false,
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -38,6 +39,10 @@ export function PaymentPage() {
     const latestRate = toNumber(latestRateData?.rate);
     const baseYear = getBaseYear(latestRateData?.date);
     const rateMap = createRateMap(result.data?.rateHistory ?? []);
+    const paymentRules = result.data?.paymentRules ?? [];
+    const isPaypay = paymentRules.some(
+      (r) => r.paymentPlan === paymentPlan && r.paymentType === 'paypay',
+    );
     const records = (result.data?.shoppingRecords ?? [])
       .filter((record) => record.payment === paymentPlan)
       .sort((left, right) => String(right.date).localeCompare(String(left.date)));
@@ -49,6 +54,7 @@ export function PaymentPage() {
       latestRate,
       baseYear,
       rateMap,
+      isPaypay,
     });
   }
 
@@ -65,7 +71,7 @@ export function PaymentPage() {
     }
   }
 
-  const groupedRecords = groupRecordsByDate(state.records, state.rateMap, state.latestRate, state.baseYear);
+  const groupedRecords = groupRecordsByDate(state.records, state.rateMap, state.latestRate, state.baseYear, state.isPaypay);
 
   return (
     <AppShell
@@ -91,7 +97,7 @@ export function PaymentPage() {
                 <header className="flex items-center justify-between gap-3 text-[14px]">
                   <strong>{group.date}</strong>
                   <span className="whitespace-nowrap text-[var(--line)]">
-                    <span className="text-[#ef4444]">
+                    <span className="text-[var(--warning)]">
                       -{formatCurrency(group.expenseTwd, 'TWD')}
                     </span>
                   </span>
@@ -113,11 +119,9 @@ export function PaymentPage() {
                         </>
                       )}
                       primary={formatCurrency(
-                        getEstimatedRecordTwdCost(
-                          record,
-                          state.rateMap,
-                          state.latestRate,
-                        ),
+                        state.isPaypay && toNumber(record.twdAmount) > 0
+                          ? toNumber(record.twdAmount)
+                          : getEstimatedRecordTwdCost(record, state.rateMap, state.latestRate),
                         'TWD',
                       )}
                       secondary={formatCurrency(getRecordJpyAmount(record), 'JPY')}
@@ -133,7 +137,7 @@ export function PaymentPage() {
   );
 }
 
-function groupRecordsByDate(records, rateMap, fallbackRate, baseYear) {
+function groupRecordsByDate(records, rateMap, fallbackRate, baseYear, isPaypay) {
   const grouped = records.reduce((accumulator, record) => {
     const date = record.date || '未知日期';
     const current = accumulator[date] ?? {
@@ -143,9 +147,10 @@ function groupRecordsByDate(records, rateMap, fallbackRate, baseYear) {
     };
 
     current.records.push(record);
-    current.expenseTwd += Math.abs(
-      getEstimatedRecordTwdCost(record, rateMap, fallbackRate, baseYear),
-    );
+    const twd = isPaypay && toNumber(record.twdAmount) > 0
+      ? toNumber(record.twdAmount)
+      : Math.abs(getEstimatedRecordTwdCost(record, rateMap, fallbackRate, baseYear));
+    current.expenseTwd += twd;
     accumulator[date] = current;
     return accumulator;
   }, {});

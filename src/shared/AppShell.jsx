@@ -12,16 +12,16 @@ export function AppShell({ title, subtitle, currentPath, children, actions, hide
     <div className="app-shell min-h-screen bg-white text-[var(--text)]">
       <main className="content">
         <section className="app-frame">
-          <header className="page-header page-header-fixed bg-white/90">
+          <header className="page-header page-header-fixed">
             <div className="page-header-side">
               {backHref ? (
                 <a
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--line)] bg-white text-[var(--accent)]"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--accent-soft)] bg-white text-[var(--accent)]"
                   href={backHref}
                   aria-label="返回"
                   title="返回"
                 >
-                  <ChevronLeft size={16} strokeWidth={2.4} />
+                  <ChevronLeft size={16} strokeWidth={2.4} className="text-[var(--accent)]" />
                 </a>
               ) : null}
             </div>

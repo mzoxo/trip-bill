@@ -81,7 +81,7 @@ export function CategoryChipsSection({ value, onChange }) {
         {CATEGORY_OPTIONS.length > 8 ? (
           <button
             type="button"
-            className="border-0 bg-transparent text-[13px] font-bold text-[var(--accent)]"
+            className="border-0 bg-transparent text-[12px] font-bold text-[var(--accent)]"
             onClick={() => setShowAll((c) => !c)}
           >
             {showAll ? '收合' : '更多'}
@@ -95,7 +95,7 @@ export function CategoryChipsSection({ value, onChange }) {
             <button
               key={option.label}
               type="button"
-              className={isSelected ? 'inline-flex min-h-8 items-center gap-2 rounded-full border border-[var(--accent)] bg-[var(--accent-soft)] px-3 py-1 text-[12px] leading-none text-[var(--accent-deep)]' : 'inline-flex min-h-8 items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-3 py-1 text-[12px] leading-none text-[#4b5563]'}
+              className={isSelected ? 'inline-flex min-h-8 items-center gap-2 rounded-full border border-[var(--accent)] bg-[var(--accent-soft)] px-3 py-1 text-[12px] leading-none text-[var(--accent-deep)]' : 'inline-flex min-h-8 items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-3 py-1 text-[12px] leading-none '}
               aria-pressed={isSelected}
               onClick={() => onChange(value === option.label ? '' : option.label)}
             >
