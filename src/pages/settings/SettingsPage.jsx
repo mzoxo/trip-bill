@@ -8,6 +8,7 @@ import {
   TextInput,
 } from '../../shared/ui.jsx';
 import { clearAppDataCache, pingConnection } from '../../lib/gas/client.js';
+import { appUrl } from '../../lib/navigation.js';
 import { getAppSettings, saveAppSettings } from '../../lib/storage/settings.js';
 
 export function SettingsPage() {
@@ -51,7 +52,7 @@ export function SettingsPage() {
     <AppShell
       title="設定"
       subtitle=""
-      currentPath="/settings.html"
+      currentPath={appUrl('/settings.html')}
       hideNavigation
     >
       <StatusBanner tone={tone}>{message}</StatusBanner>

@@ -11,6 +11,7 @@ import {
   StatusBanner,
 } from '../../shared/ui.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
+import { appNavigate, appUrl } from '../../lib/navigation.js';
 import { getAppData, updatePaymentRuleEnabled } from '../../lib/gas/client.js';
 import { calcPaymentStatus } from '../../lib/domain/calcPaymentStatus.js';
 import { formatCurrency, formatPercent, toNumber } from '../../lib/domain/format.js';
@@ -33,7 +34,7 @@ export function AssetsPage() {
 
   async function load(forceRefresh = false) {
     if (!hasAppSettings()) {
-      window.location.href = '/settings.html';
+      appNavigate('/settings.html');
       return;
     }
 
@@ -135,7 +136,7 @@ export function AssetsPage() {
     <AppShell
       title="資產"
       subtitle=""
-      currentPath="/assets.html"
+      currentPath={appUrl('/assets.html')}
       actions={(
         <>
           <HeaderIconButton
@@ -161,12 +162,12 @@ export function AssetsPage() {
                 key={item.paymentPlan}
                 paymentPlan={item.paymentPlan}
                 onClick={() => {
-                  window.location.href = `/payment.html?payment=${encodeURIComponent(item.paymentPlan)}`;
+                  appNavigate(`/payment.html?payment=${encodeURIComponent(item.paymentPlan)}`);
                 }}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
-                    window.location.href = `/payment.html?payment=${encodeURIComponent(item.paymentPlan)}`;
+                    appNavigate(`/payment.html?payment=${encodeURIComponent(item.paymentPlan)}`);
                   }
                 }}
                 leading={(

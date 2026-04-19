@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
 import { RefreshButton, SaveOverlay, StatusBanner, TextInput } from '../../shared/ui.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
+import { appNavigate, appUrl } from '../../lib/navigation.js';
 import { getAppData } from '../../lib/gas/client.js';
 import { calcPaymentStatus } from '../../lib/domain/calcPaymentStatus.js';
 import { getPaymentAdvice } from '../../lib/domain/getPaymentAdvice.js';
@@ -20,7 +21,7 @@ export function AdvicePage() {
 
   async function load(forceRefresh = false) {
     if (!hasAppSettings()) {
-      window.location.href = '/settings.html';
+      appNavigate('/settings.html');
       return;
     }
 
@@ -68,7 +69,7 @@ export function AdvicePage() {
     <AppShell
       title="建議"
       subtitle=""
-      currentPath="/advice.html"
+      currentPath={appUrl('/advice.html')}
       actions={<RefreshButton isRefreshing={isRefreshing} onRefresh={handleRefresh} />}
     >
       {isRefreshing ? <SaveOverlay>重新抓取資料中</SaveOverlay> : null}

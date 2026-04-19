@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
 import { CategoryChip, RecordListLink, RefreshButton, SaveOverlay, StatusBanner } from '../../shared/ui.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
+import { appNavigate, appUrl } from '../../lib/navigation.js';
 import { getAppData } from '../../lib/gas/client.js';
 import { formatCurrency, toNumber } from '../../lib/domain/format.js';
 import {
@@ -29,7 +30,7 @@ export function PaymentPage() {
 
   async function load(forceRefresh = false) {
     if (!hasAppSettings()) {
-      window.location.href = '/settings.html';
+      appNavigate('/settings.html');
       return;
     }
 
@@ -75,7 +76,7 @@ export function PaymentPage() {
 
   return (
     <AppShell
-      backHref="/assets.html"
+      backHref={appUrl('/assets.html')}
       title={paymentPlan || '支付明細'}
       currentPath=""
       hideNavigation
@@ -106,7 +107,7 @@ export function PaymentPage() {
                   {group.records.map((record) => (
                     <RecordListLink
                       key={record.rowNumber}
-                      href={`/record.html?row=${record.rowNumber}`}
+                      href={appUrl(`/record.html?row=${record.rowNumber}`)}
                       title={record.name || record.store}
                       meta={(
                         <>

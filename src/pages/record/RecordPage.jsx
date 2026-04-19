@@ -13,6 +13,7 @@ import {
   ShoppingFormFields,
 } from '../../shared/entryForm.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
+import { appNavigate, appUrl } from '../../lib/navigation.js';
 import {
   deleteShoppingRecord,
   getAppData,
@@ -84,7 +85,7 @@ export function RecordPage() {
 
   async function load(forceRefresh = false) {
     if (!hasAppSettings()) {
-      window.location.href = '/settings.html';
+      appNavigate('/settings.html');
       return;
     }
 
@@ -166,7 +167,7 @@ export function RecordPage() {
     try {
       const result = await deleteShoppingRecord(settings.webAppUrl, settings.token, rowNumber);
       if (result.success) {
-        window.location.href = '/index.html';
+        appNavigate('/index.html');
         return;
       }
       setMessage(result.message || '刪除失敗');
@@ -186,7 +187,7 @@ export function RecordPage() {
 
   return (
     <AppShell
-      backHref="/index.html"
+      backHref={appUrl('/index.html')}
       title="編輯交易"
       currentPath=""
       hideNavigation

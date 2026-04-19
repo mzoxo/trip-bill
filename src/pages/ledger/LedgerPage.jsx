@@ -17,6 +17,7 @@ import {
 } from '../../shared/entryForm.jsx';
 import { TRIP_DATE_OPTIONS } from '../../lib/constants/trip.js';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
+import { appNavigate, appUrl } from '../../lib/navigation.js';
 import {
   createShoppingRecord,
   createSuicaRecord,
@@ -130,7 +131,7 @@ export function LedgerPage() {
 
   async function load(forceRefresh = false) {
     if (!hasAppSettings()) {
-      window.location.href = '/settings.html';
+      appNavigate('/settings.html');
       return;
     }
 
@@ -304,10 +305,10 @@ export function LedgerPage() {
 
   return (
     <AppShell
-      backHref="/index.html"
+      backHref={appUrl('/index.html')}
       title="記帳"
       subtitle=""
-      currentPath="/ledger.html"
+      currentPath={appUrl('/ledger.html')}
       hideNavigation
       actions={<RefreshButton isRefreshing={isRefreshing} onRefresh={handleRefresh} />}
     >

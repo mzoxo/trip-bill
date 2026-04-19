@@ -1,10 +1,11 @@
 import { ChevronLeft, ChartPie, House, Wallet } from 'lucide-react';
 import '../styles/index.css';
+import { appUrl } from '../lib/navigation.js';
 
 const NAV_ITEMS = [
-  { href: '/index.html', label: '總覽', icon: House },
-  { href: '/assets.html', label: '資產', icon: Wallet },
-  { href: '/advice.html', label: '建議', icon: ChartPie },
+  { href: appUrl('/index.html'), label: '總覽', icon: House },
+  { href: appUrl('/assets.html'), label: '資產', icon: Wallet },
+  { href: appUrl('/advice.html'), label: '建議', icon: ChartPie },
 ];
 
 export function AppShell({ title, subtitle, currentPath, children, actions, hideNavigation = false, backHref = '' }) {

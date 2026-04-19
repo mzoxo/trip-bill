@@ -30,6 +30,7 @@ import {
   normalizeRecordDate,
 } from '../../lib/domain/calcOverview.js';
 import { formatCurrency, toNumber } from '../../lib/domain/format.js';
+import { appNavigate, appUrl } from '../../lib/navigation.js';
 
 const DEFAULT_BUDGET_TWD = 23000;
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
@@ -70,7 +71,7 @@ export function OverviewPage() {
 
   async function load(forceRefresh = false) {
     if (!hasAppSettings()) {
-      window.location.href = '/settings.html';
+      appNavigate('/settings.html');
       return;
     }
 
@@ -139,7 +140,7 @@ export function OverviewPage() {
         </span>
       )}
       subtitle=""
-      currentPath="/index.html"
+      currentPath={appUrl('/index.html')}
       actions={<RefreshButton isRefreshing={isRefreshing} onRefresh={handleRefresh} />}
     >
       {isRefreshing ? <SaveOverlay>重新抓取資料中</SaveOverlay> : null}
@@ -189,7 +190,7 @@ export function OverviewPage() {
                   <div className="grid gap-[10px]">
                     {group.records.map((record, index) => (
                       <RecordListLink
-                        href={`/record.html?row=${record.rowNumber}`}
+                        href={appUrl(`/record.html?row=${record.rowNumber}`)}
                         key={record.rowNumber ?? `${group.date}-${record.store}-${index}`}
                         leading={<div className="grid h-8 w-8 place-items-center rounded-[10px] bg-[#f7f7f7] text-[18px]">{getCategoryIcon(record.category)}</div>}
                         title={(
@@ -218,7 +219,7 @@ export function OverviewPage() {
             </div>
           </section>
 
-          <a className="fixed bottom-[72px] left-1/2 inline-flex min-h-[52px] min-w-[140px] -translate-x-1/2 items-center justify-center rounded-full  px-4 font-extrabold bg-[var(--accent)] text-[#ffffff]" href="/ledger.html">
+          <a className="fixed bottom-[72px] left-1/2 inline-flex min-h-[52px] min-w-[140px] -translate-x-1/2 items-center justify-center rounded-full  px-4 font-extrabold bg-[var(--accent)] text-[#ffffff]" href={appUrl('/ledger.html')}>
             記帳
           </a>
         </>
