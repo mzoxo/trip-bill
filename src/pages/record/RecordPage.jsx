@@ -121,7 +121,6 @@ export function RecordPage() {
 
   async function handleRefresh() {
     setIsRefreshing(true);
-    setMessage('重新抓取資料中...');
     try {
       await load(true);
     } finally {
@@ -132,7 +131,7 @@ export function RecordPage() {
   async function handleSubmit(event) {
     event.preventDefault();
     setIsSaving(true);
-    setMessage('更新交易中...');
+    setMessage('更新交易中');
     try {
       const normalizedForm = {
         ...form,
@@ -163,7 +162,7 @@ export function RecordPage() {
     }
 
     setIsDeleting(true);
-    setMessage('刪除交易中...');
+    setMessage('刪除交易中');
     try {
       const result = await deleteShoppingRecord(settings.webAppUrl, settings.token, rowNumber);
       if (result.success) {
@@ -176,8 +175,8 @@ export function RecordPage() {
     }
   }
 
-  const selectedPaymentRule = paymentRules.find((rule) => rule.paymentPlan === form.payment);
-  const shouldShowTwdAmount = selectedPaymentRule?.paymentType === 'paypay';
+  const selectedPaymentRule = paymentRules.find((r) => r.paymentPlan === form.payment);
+  const shouldShowTwdAmount = selectedPaymentRule?.paymentType === 'paypay' || Number(form.twdAmount) !== 0;
 
   function handleJpyNetChange(value) { setForm((c) => ({ ...c, jpyNet: value })); }
   function handleTaxChange(value) { setForm((c) => ({ ...c, tax: c.tax === value ? '' : value })); }
@@ -194,11 +193,12 @@ export function RecordPage() {
       actions={<RefreshButton isRefreshing={isRefreshing} onRefresh={handleRefresh} />}
     >
       {(isSaving || isDeleting) ? (
-        <SaveOverlay>{isDeleting ? '刪除中...' : '儲存中...'}</SaveOverlay>
+        <SaveOverlay>{isDeleting ? '刪除中' : '儲存中'}</SaveOverlay>
       ) : null}
+      {isRefreshing ? <SaveOverlay>重新抓取資料中</SaveOverlay> : null}
       {message ? <StatusBanner>{message}</StatusBanner> : null}
       {isLoading ? (
-        <StatusBanner tone="neutral">正在整理資料...</StatusBanner>
+        <SaveOverlay>載入資料中</SaveOverlay>
       ) : (
         <form className="grid gap-6 pt-2" onSubmit={handleSubmit}>
           <ShoppingFormFields
@@ -226,14 +226,14 @@ export function RecordPage() {
               onClick={handleDelete}
               disabled={isDeleting}
             >
-              {isDeleting ? '刪除中...' : '刪除'}
+              {isDeleting ? '刪除中' : '刪除'}
             </button>
             <button
               className={PRIMARY_BLOCK_BUTTON_CLASS_NAME}
               type="submit"
               disabled={isSaving}
             >
-              {isSaving ? '儲存中...' : '儲存'}
+              {isSaving ? '儲存中' : '儲存'}
             </button>
           </StickySubmitBar>
         </form>

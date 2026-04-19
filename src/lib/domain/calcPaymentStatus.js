@@ -13,6 +13,9 @@ export function calcPaymentStatus(records, suicaRecords, rules, options = {}) {
   const rateMap = options.rateMap ?? {};
   const fallbackRate = toNumber(options.fallbackRate);
   const baseYear = options.baseYear ?? new Date().getFullYear();
+  const paypaySet = new Set(
+    rules.filter((r) => r.paymentType === 'paypay').map((r) => r.paymentPlan),
+  );
 
   const usageByPayment = records.reduce((accumulator, record) => {
     const payment = record.payment || '未分類';
@@ -21,7 +24,7 @@ export function calcPaymentStatus(records, suicaRecords, rules, options = {}) {
       recordCount: 0,
       maxSingleSpentTwd: 0,
     };
-    const recordCost = getEstimatedRecordTwdCost(record, rateMap, fallbackRate, baseYear);
+    const recordCost = getEstimatedRecordTwdCost(record, rateMap, fallbackRate, baseYear, paypaySet);
 
     current.usedTwd += recordCost;
     current.recordCount += 1;

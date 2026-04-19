@@ -18,7 +18,7 @@ import tshirtIcon from '../../assets/openmoji/t-shirt.svg';
 import ticketsIcon from '../../assets/openmoji/tickets.svg';
 import trainIcon from '../../assets/openmoji/train.svg';
 import { AppShell } from '../../shared/AppShell.jsx';
-import { CategoryChip, PanelCard, RecordListLink, RefreshButton, StatusBanner } from '../../shared/ui.jsx';
+import { CategoryChip, PanelCard, RecordListLink, RefreshButton, SaveOverlay, StatusBanner } from '../../shared/ui.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import { getAppData } from '../../lib/gas/client.js';
 import {
@@ -77,9 +77,13 @@ export function OverviewPage() {
     const appDataResult = await getAppData(settings.webAppUrl, settings.token, { forceRefresh });
     const records = appDataResult.data?.shoppingRecords ?? [];
     const suicaRecords = appDataResult.data?.suicaRecords ?? [];
+    const paymentRules = appDataResult.data?.paymentRules ?? [];
     const latestRate = appDataResult.data?.latestRate ?? null;
     const baseYear = getBaseYear(latestRate?.date);
     const rateMap = createRateMap(appDataResult.data?.rateHistory ?? []);
+    const paypaySet = new Set(
+      paymentRules.filter((r) => r.paymentType === 'paypay').map((r) => r.paymentPlan),
+    );
 
     setState({
       loading: false,
@@ -88,6 +92,7 @@ export function OverviewPage() {
         rateMap,
         fallbackRate: latestRate?.rate,
         baseYear,
+        paypaySet,
       }),
       groupedRecords: groupRecordsByDate(records, {
         rateMap,
@@ -105,7 +110,6 @@ export function OverviewPage() {
 
   async function handleRefresh() {
     setIsRefreshing(true);
-    setState((current) => ({ ...current, message: '重新抓取資料中...' }));
     try {
       await load(true);
     } finally {
@@ -136,9 +140,10 @@ export function OverviewPage() {
       currentPath="/index.html"
       actions={<RefreshButton isRefreshing={isRefreshing} onRefresh={handleRefresh} />}
     >
+      {isRefreshing ? <SaveOverlay>重新抓取資料中</SaveOverlay> : null}
       {state.message ? <StatusBanner>{state.message}</StatusBanner> : null}
       {state.loading || !overview ? (
-        <StatusBanner tone="neutral">正在整理資料...</StatusBanner>
+        <SaveOverlay>載入資料中</SaveOverlay>
       ) : (
         <>
           <PanelCard className="px-4 py-3">

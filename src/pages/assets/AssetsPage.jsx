@@ -79,7 +79,6 @@ export function AssetsPage() {
 
   async function handleRefresh() {
     setIsRefreshing(true);
-    setState((current) => ({ ...current, message: '重新抓取資料中...' }));
     try {
       await load(true);
     } finally {
@@ -150,6 +149,7 @@ export function AssetsPage() {
         </>
       )}
     >
+      {(isRefreshing || state.loading) ? <SaveOverlay>載入資料中</SaveOverlay> : null}
       {state.message ? <StatusBanner>{state.message}</StatusBanner> : null}
       <section className="grid gap-[18px]">
         <div className="grid gap-3">
@@ -261,7 +261,7 @@ export function AssetsPage() {
         </div>
       ) : null}
       {isSavingRule ? (
-        <SaveOverlay>{pendingPaymentPlan ? `更新 ${pendingPaymentPlan} 中...` : '更新中...'}</SaveOverlay>
+        <SaveOverlay>{pendingPaymentPlan ? `更新 ${pendingPaymentPlan} 中` : '更新中'}</SaveOverlay>
       ) : null}
     </AppShell>
   );

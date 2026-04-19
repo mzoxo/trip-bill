@@ -95,7 +95,7 @@ export function CategoryChipsSection({ value, onChange }) {
             <button
               key={option.label}
               type="button"
-              className={isSelected ? 'inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--accent)] bg-[var(--accent-soft)] px-3 py-2 text-[14px] leading-none text-[var(--accent-deep)]' : 'inline-flex min-h-10 items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-3 py-2 text-[14px] leading-none text-[#4b5563]'}
+              className={isSelected ? 'inline-flex min-h-8 items-center gap-2 rounded-full border border-[var(--accent)] bg-[var(--accent-soft)] px-3 py-1 text-[12px] leading-none text-[var(--accent-deep)]' : 'inline-flex min-h-8 items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-3 py-1 text-[12px] leading-none text-[#4b5563]'}
               aria-pressed={isSelected}
               onClick={() => onChange(value === option.label ? '' : option.label)}
             >

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
 import {
   FloatingSelect,
@@ -109,6 +109,21 @@ export function LedgerPage() {
   const [suicaForm, setSuicaForm] = useState(() => createSuicaInitialState());
   const [paymentRules, setPaymentRules] = useState([]);
   const [message, setMessage] = useState('尚未載入資料');
+  const [messageTone, setMessageTone] = useState('neutral');
+  const bannerRef = useRef(null);
+
+  function showMessage(text, tone = 'neutral') {
+    setMessage(text);
+    setMessageTone(tone);
+    if (tone === 'warning') {
+      setTimeout(() => {
+        const el = bannerRef.current;
+        if (!el) return;
+        const top = el.getBoundingClientRect().top + window.scrollY - 48 - 8;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }, 0);
+    }
+  }
   const [isSavingShopping, setIsSavingShopping] = useState(false);
   const [isSavingSuica, setIsSavingSuica] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -140,7 +155,7 @@ export function LedgerPage() {
       ...current,
       date: current.date || getDefaultTripDate(),
     }));
-    setMessage(result.message || '');
+    showMessage(result.message || '');
   }
 
   useEffect(() => {
@@ -178,7 +193,6 @@ export function LedgerPage() {
 
   async function handleRefresh() {
     setIsRefreshing(true);
-    setMessage('重新抓取資料中...');
     try {
       await load(true);
     } finally {
@@ -220,8 +234,20 @@ export function LedgerPage() {
 
   async function handleShoppingSubmit(event) {
     event.preventDefault();
+
+    const missing = [];
+    if (!shoppingForm.date) missing.push('日期');
+    if (!shoppingForm.payment) missing.push('支付');
+    if (!shoppingForm.category) missing.push('屬性');
+    if (!shoppingForm.name.trim()) missing.push('名稱');
+    if (!shoppingForm.total || Number(shoppingForm.total) <= 0) missing.push('日幣總計');
+    if (missing.length > 0) {
+      showMessage(`請填寫：${missing.join('、')}`, 'warning');
+      return;
+    }
+
     setIsSavingShopping(true);
-    setMessage('一般消費送出中...');
+    showMessage('一般消費送出中');
 
     try {
       const result = await createShoppingRecord(
@@ -232,7 +258,7 @@ export function LedgerPage() {
           location: '札幌',
         },
       );
-      setMessage(result.success ? '一般消費已送出' : result.message || '送出失敗');
+      showMessage(result.success ? '一般消費已送出' : result.message || '送出失敗');
       if (result.success) {
         setShoppingForm(createShoppingInitialState(getDefaultPayment(paymentRules)));
         setShoppingCalcState(createShoppingCalculationState());
@@ -248,7 +274,7 @@ export function LedgerPage() {
   async function handleSuicaSubmit(event) {
     event.preventDefault();
     setIsSavingSuica(true);
-    setMessage('Suica 儲值送出中...');
+    showMessage('Suica 儲值送出中');
     const payload = {
       ...suicaForm,
       chargeTwd: '',
@@ -261,7 +287,7 @@ export function LedgerPage() {
     };
     try {
       const result = await createSuicaRecord(settings.webAppUrl, settings.token, payload);
-      setMessage(result.success ? 'Suica 儲值已送出' : result.message || '送出失敗');
+      showMessage(result.success ? 'Suica 儲值已送出' : result.message || '送出失敗');
       if (result.success) {
         setSuicaForm(createSuicaInitialState());
         if (window.__ledgerReload) {
@@ -273,7 +299,7 @@ export function LedgerPage() {
     }
   }
 
-  const selectedPaymentRule = paymentRules.find((rule) => rule.paymentPlan === shoppingForm.payment);
+  const selectedPaymentRule = paymentRules.find((r) => r.paymentPlan === shoppingForm.payment);
   const shouldShowTwdAmount = selectedPaymentRule?.paymentType === 'paypay';
 
   return (
@@ -286,9 +312,10 @@ export function LedgerPage() {
       actions={<RefreshButton isRefreshing={isRefreshing} onRefresh={handleRefresh} />}
     >
       {(isSavingShopping || isSavingSuica) ? (
-        <SaveOverlay>{isSavingShopping ? '一般消費送出中...' : 'Suica 儲值送出中...'}</SaveOverlay>
+        <SaveOverlay>{isSavingShopping ? '一般消費送出中' : 'Suica 儲值送出中'}</SaveOverlay>
       ) : null}
-      {message ? <StatusBanner>{message}</StatusBanner> : null}
+      {isRefreshing ? <SaveOverlay>重新抓取資料中</SaveOverlay> : null}
+      <div ref={bannerRef}>{message ? <StatusBanner tone={messageTone}>{message}</StatusBanner> : null}</div>
 
       <section className="grid grid-cols-2 gap-[6px] rounded-[12px] border border-[var(--line)] bg-white p-1" role="tablist" aria-label="記帳模式">
         <button
@@ -330,7 +357,7 @@ export function LedgerPage() {
 
             <StickySubmitBar>
               <button className={PRIMARY_BLOCK_BUTTON_CLASS_NAME} type="submit" disabled={isSavingShopping}>
-                {isSavingShopping ? '送出中...' : '新增一般消費'}
+                {isSavingShopping ? '送出中' : '新增一般消費'}
               </button>
             </StickySubmitBar>
           </form>
@@ -365,7 +392,7 @@ export function LedgerPage() {
 
             <StickySubmitBar>
               <button className={PRIMARY_BLOCK_BUTTON_CLASS_NAME} type="submit" disabled={isSavingSuica}>
-                {isSavingSuica ? '送出中...' : '新增 Suica 儲值'}
+                {isSavingSuica ? '送出中' : '新增 Suica 儲值'}
               </button>
             </StickySubmitBar>
           </form>

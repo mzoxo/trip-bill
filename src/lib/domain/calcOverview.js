@@ -4,10 +4,11 @@ export function calcOverview(records, suicaRecords, options = {}) {
   const rateMap = options.rateMap ?? {};
   const fallbackRate = toNumber(options.fallbackRate);
   const baseYear = options.baseYear ?? new Date().getFullYear();
+  const paypaySet = options.paypaySet ?? null;
 
   const totals = records.reduce(
     (accumulator, record) => {
-      const twdCost = getEstimatedRecordTwdCost(record, rateMap, fallbackRate, baseYear);
+      const twdCost = getEstimatedRecordTwdCost(record, rateMap, fallbackRate, baseYear, paypaySet);
       accumulator.totalJpy += getRecordJpyAmount(record);
       accumulator.totalTwd += toNumber(record.twdAmount);
       accumulator.totalFee += toNumber(record.fee);
@@ -52,8 +53,8 @@ export function calcOverview(records, suicaRecords, options = {}) {
   return totals;
 }
 
-export function getEstimatedRecordTwdCost(record, rateMap = {}, fallbackRate = 0, baseYear) {
-  if (usesDirectTwdAmount(record.payment)) {
+export function getEstimatedRecordTwdCost(record, rateMap = {}, fallbackRate = 0, baseYear, paypaySet = null) {
+  if (usesDirectTwdAmount(record.payment, paypaySet)) {
     return getRecordTwdAmount(record);
   }
 
@@ -73,18 +74,14 @@ export function getRecordTwdAmount(record) {
   return firstNonZero([
     record.twdTotal,
     record.twdAmount,
-    record.total,
   ]);
 }
 
-export function usesDirectTwdAmount(payment) {
-  return [
-    '全盈+PAY',
-    '全盈+PAY玉山',
-    '全盈+PAY國泰',
-    '全支付',
-    '全支付國泰',
-  ].includes(payment);
+export function usesDirectTwdAmount(payment, paypaySet = null) {
+  if (paypaySet) {
+    return paypaySet.has(payment);
+  }
+  return false;
 }
 
 export function getRecordRate(value, rateMap = {}, fallbackRate = 0, baseYear) {

@@ -1,4 +1,4 @@
-import { RotateCw } from 'lucide-react';
+import { Loader2, RotateCw } from 'lucide-react';
 
 function joinClassNames(...values) {
   return values.filter(Boolean).join(' ');
@@ -121,15 +121,15 @@ export function CategoryChip({ className = '', children }) {
   return <span className={joinClassNames(CATEGORY_CHIP_CLASS_NAME, className)}>{children}</span>;
 }
 
-export function LoadingCard({ className = '', children = '資料整理中...' }) {
+export function LoadingCard({ className = '', children = '資料整理中' }) {
   return (
-    <article className={joinClassNames('grid gap-1 rounded-[14px] border border-[#f0f0f0] bg-white p-4', className)}>
-      <div className="min-w-0">
-        <strong>{children}</strong>
-      </div>
+    <article className={joinClassNames('flex items-center gap-2 rounded-[14px] border border-[#f0f0f0] bg-white p-4', className)}>
+      <Loader2 size={16} strokeWidth={2} className="animate-spin shrink-0 text-[var(--accent)]" />
+      <strong>{children}</strong>
     </article>
   );
 }
+
 
 export function SegmentedControl({ options, value, onChange, ariaLabel, className = '' }) {
   return (
@@ -238,7 +238,8 @@ export function SaveOverlay({ children }) {
       role="status"
       aria-live="polite"
     >
-      <div className="rounded-full border border-[var(--line)] bg-[rgba(255,255,255,0.96)] px-4 py-3 text-[14px] font-bold text-[var(--text)] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
+      <div className="flex items-center gap-2 rounded-full border border-[var(--line)] bg-[rgba(255,255,255,0.96)] px-4 py-3 text-[14px] font-bold text-[var(--text)] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
+        <Loader2 size={15} strokeWidth={2} className="animate-spin shrink-0 text-[var(--accent)]" />
         <strong>{children}</strong>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
-import { RefreshButton, StatusBanner, TextInput } from '../../shared/ui.jsx';
+import { RefreshButton, SaveOverlay, StatusBanner, TextInput } from '../../shared/ui.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import { getAppData } from '../../lib/gas/client.js';
 import { calcPaymentStatus } from '../../lib/domain/calcPaymentStatus.js';
@@ -48,7 +48,6 @@ export function AdvicePage() {
 
   async function handleRefresh() {
     setIsRefreshing(true);
-    setMessage('重新抓取資料中...');
     try {
       await load(true);
     } finally {
@@ -72,6 +71,7 @@ export function AdvicePage() {
       currentPath="/advice.html"
       actions={<RefreshButton isRefreshing={isRefreshing} onRefresh={handleRefresh} />}
     >
+      {isRefreshing ? <SaveOverlay>重新抓取資料中</SaveOverlay> : null}
       {message ? <StatusBanner>{message}</StatusBanner> : null}
       <section className="grid gap-3">
         <div className="grid gap-2">

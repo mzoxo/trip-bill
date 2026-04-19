@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '../../shared/AppShell.jsx';
-import { CategoryChip, RecordListLink, RefreshButton, StatusBanner } from '../../shared/ui.jsx';
+import { CategoryChip, RecordListLink, RefreshButton, SaveOverlay, StatusBanner } from '../../shared/ui.jsx';
 import { getAppSettings, hasAppSettings } from '../../lib/storage/settings.js';
 import { getAppData } from '../../lib/gas/client.js';
 import { formatCurrency, toNumber } from '../../lib/domain/format.js';
@@ -58,7 +58,6 @@ export function PaymentPage() {
 
   async function handleRefresh() {
     setIsRefreshing(true);
-    setState((current) => ({ ...current, message: '重新抓取資料中...' }));
     try {
       await load(true);
     } finally {
@@ -78,9 +77,10 @@ export function PaymentPage() {
         <RefreshButton isRefreshing={isRefreshing} onRefresh={handleRefresh} />
       )}
     >
+      {isRefreshing ? <SaveOverlay>重新抓取資料中</SaveOverlay> : null}
       {state.message ? <StatusBanner>{state.message}</StatusBanner> : null}
       {state.loading ? (
-        <StatusBanner tone="neutral">正在整理資料...</StatusBanner>
+        <SaveOverlay>載入資料中</SaveOverlay>
       ) : groupedRecords.length === 0 ? (
         <StatusBanner tone="neutral">目前沒有這個支付方式的消費紀錄</StatusBanner>
       ) : (

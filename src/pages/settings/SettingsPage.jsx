@@ -19,7 +19,7 @@ export function SettingsPage() {
 
   async function handleTestConnection() {
     setIsTesting(true);
-    setMessage('測試連線中...');
+    setMessage('測試連線中');
     setTone('neutral');
 
     try {
@@ -34,7 +34,7 @@ export function SettingsPage() {
   function handleSave(event) {
     event.preventDefault();
     setIsSaving(true);
-    setMessage('儲存設定中...');
+    setMessage('儲存設定中');
     setTone('neutral');
 
     try {
@@ -95,7 +95,7 @@ export function SettingsPage() {
                 type="submit"
                 disabled={isSaving}
               >
-                {isSaving ? '儲存中...' : '儲存設定'}
+                {isSaving ? '儲存中' : '儲存設定'}
               </button>
               <button
                 className={SECONDARY_BUTTON_CLASS_NAME}
@@ -103,7 +103,7 @@ export function SettingsPage() {
                 onClick={handleTestConnection}
                 disabled={isTesting}
               >
-                {isTesting ? '測試中...' : '測試連線'}
+                {isTesting ? '測試中' : '測試連線'}
               </button>
             </div>
           </form>
