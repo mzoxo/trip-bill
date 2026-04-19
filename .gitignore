@@ -1,5 +1,5 @@
 node_modules/
 dist/
 .codex/
-gas/
+/gas/
 *.md
