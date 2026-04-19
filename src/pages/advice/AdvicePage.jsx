@@ -15,7 +15,7 @@ export function AdvicePage() {
   const [message, setMessage] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [form, setForm] = useState({
-    amountJpy: '1000',
+    amountJpy: '',
   });
 
   async function load(forceRefresh = false) {

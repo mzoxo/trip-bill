@@ -82,8 +82,15 @@ function writeAppDataCache(webAppUrl, token, data) {
   );
 }
 
-export function clearAppDataCache() {
+export function clearAppDataCache(webAppUrl, token) {
+  const cached = webAppUrl && token ? readAppDataCache(webAppUrl, token) : null;
   window.localStorage.removeItem(APP_DATA_CACHE_KEY);
+  if (cached?.latestRate) {
+    writeAppDataCache(webAppUrl, token, {
+      latestRate: cached.latestRate,
+      rateHistory: cached.rateHistory ?? [],
+    });
+  }
 }
 
 export async function pingConnection(webAppUrl, token = '') {
@@ -184,7 +191,7 @@ export async function createShoppingRecord(webAppUrl, token, record) {
   try {
     const result = await sendRequest(webAppUrl, 'createShoppingRecord', { token, record });
     if (result.success) {
-      clearAppDataCache();
+      clearAppDataCache(webAppUrl, token);
     }
     return result;
   } catch (error) {
@@ -204,7 +211,7 @@ export async function updateShoppingRecord(webAppUrl, token, rowNumber, record) 
       record,
     });
     if (result.success) {
-      clearAppDataCache();
+      clearAppDataCache(webAppUrl, token);
     }
     return result;
   } catch (error) {
@@ -223,7 +230,7 @@ export async function deleteShoppingRecord(webAppUrl, token, rowNumber) {
       rowNumber,
     });
     if (result.success) {
-      clearAppDataCache();
+      clearAppDataCache(webAppUrl, token);
     }
     return result;
   } catch (error) {
@@ -239,7 +246,7 @@ export async function createSuicaRecord(webAppUrl, token, record) {
   try {
     const result = await sendRequest(webAppUrl, 'createSuicaRecord', { token, record });
     if (result.success) {
-      clearAppDataCache();
+      clearAppDataCache(webAppUrl, token);
     }
     return result;
   } catch (error) {
@@ -259,7 +266,7 @@ export async function updatePaymentRuleEnabled(webAppUrl, token, paymentPlan, en
       enabled,
     });
     if (result.success) {
-      clearAppDataCache();
+      clearAppDataCache(webAppUrl, token);
     }
     return result;
   } catch (error) {

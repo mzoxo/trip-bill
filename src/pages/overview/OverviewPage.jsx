@@ -170,9 +170,6 @@ export function OverviewPage() {
                   <p className="m-0 text-[14px]">
                     支出 <span className="text-[var(--muted)]">{formatCurrency(overview.totalCost, 'TWD')}</span>
                   </p>
-                  <p className="m-0 text-[14px]">
-                    收入 <span className="text-[var(--muted)]">{formatCurrency(0, 'TWD')}</span>
-                  </p>
                 </div>
               </div>
             </div>
@@ -183,14 +180,8 @@ export function OverviewPage() {
                 <section className="grid gap-[10px]" key={group.date}>
                   <header className="flex items-center justify-between gap-3 text-[14px]">
                     <strong>{group.label}</strong>
-                    <span className="whitespace-nowrap text-[var(--line)]">
-                      <span className="text-[#ef4444]">
-                        -{formatCurrency(group.expenseTwd, 'TWD')}
-                      </span>{' '}
-                      /{' '}
-                      <span className="text-[#16a34a]">
-                        {formatCurrency(group.incomeTwd, 'TWD')}
-                      </span>
+                    <span className="whitespace-nowrap text-[#ef4444]">
+                      -{formatCurrency(group.expenseTwd, 'TWD')}
                     </span>
                   </header>
                   <div className="grid gap-[10px]">
@@ -244,18 +235,12 @@ function groupRecordsByDate(records, options = {}) {
       date,
       records: [],
       expenseTwd: 0,
-      incomeTwd: 0,
     };
 
     current.records.push(record);
-    const twd = Math.abs(
+    current.expenseTwd += Math.abs(
       getEstimatedRecordTwdCost(record, rateMap, fallbackRate, baseYear),
     );
-    if (getEstimatedRecordTwdCost(record, rateMap, fallbackRate, baseYear) >= 0) {
-      current.expenseTwd += twd;
-    } else {
-      current.incomeTwd += twd;
-    }
 
     accumulator[date] = current;
     return accumulator;
